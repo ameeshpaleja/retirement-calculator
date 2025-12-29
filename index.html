@@ -391,7 +391,7 @@
                                             <span class="tooltiptext">Age when you plan to retire and start withdrawing from your portfolio.</span>
                                         </span>
                                     </label>
-                                    <input type="number" id="retirement-age" value="45" min="18" max="100"
+                                    <input type="number" id="retirement-age" value="65" min="18" max="100"
                                         class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                 </div>
 
@@ -403,7 +403,7 @@
                                             <span class="tooltiptext">The age you want to plan for. Common values are 90-100 to account for longevity risk.</span>
                                         </span>
                                     </label>
-                                    <input type="number" id="planning-age" value="95" min="18" max="120"
+                                    <input type="number" id="planning-age" value="90" min="18" max="120"
                                         class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                 </div>
 
@@ -417,7 +417,7 @@
                                     </label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
-                                        <input type="text" id="starting-portfolio" value="1,500,000"
+                                        <input type="text" id="starting-portfolio" value="3,000,000"
                                             class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                     </div>
                                 </div>
@@ -474,7 +474,7 @@
                                         </span>
                                     </label>
                                     <div class="relative">
-                                        <input type="text" id="inflation-rate" value="3.0"
+                                        <input type="text" id="inflation-rate" value="2.5"
                                             class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                         <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 font-medium">%</span>
                                     </div>
@@ -509,7 +509,7 @@
                                     </label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
-                                        <input type="text" id="min-spending" value="150,000"
+                                        <input type="text" id="min-spending" value="100,000"
                                             class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                     </div>
                                     <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">In today's purchasing power (inflation-adjusted)</p>
@@ -647,45 +647,12 @@
 
                     </div>
 
-                    <!-- Preset Scenarios -->
-                    <div class="mt-8">
-                        <div class="text-center mb-4">
-                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Start Templates</h4>
-                            <div class="flex flex-wrap justify-center gap-2">
-                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
-                                    data-preset="conservative">
-                                    🛡️ Conservative
-                                </button>
-                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
-                                    data-preset="moderate">
-                                    ⚖️ Moderate
-                                </button>
-                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
-                                    data-preset="aggressive">
-                                    🚀 Aggressive
-                                </button>
-                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
-                                    data-preset="early-retire">
-                                    ⏰ Early Retirement
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Run Button -->
-                    <div class="mt-4 text-center">
+                    <div class="mt-8 text-center">
                         <button id="run-simulation"
                             class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-12 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 text-lg">
                             Run Simulation
                         </button>
-                        <div class="mt-3 flex justify-center gap-3">
-                            <button id="save-scenario" class="no-print px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                💾 Save Scenario
-                            </button>
-                            <button id="export-pdf" class="no-print px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                📄 Export PDF
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Status Message -->
@@ -2523,239 +2490,6 @@
                     document.getElementById('back-to-assumptions').classList.add('hidden');
                 });
 
-                // Preset scenario buttons
-                document.querySelectorAll('.preset-scenario').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const preset = btn.dataset.preset;
-                        PresetScenarios.load(preset);
-                    });
-                });
-
-                // Save scenario button
-                document.getElementById('save-scenario').addEventListener('click', () => {
-                    ScenarioManager.saveCurrentScenario();
-                });
-
-                // Export PDF button
-                document.getElementById('export-pdf').addEventListener('click', () => {
-                    PDFExport.generate();
-                });
-
-                // Load saved scenarios on init
-                ScenarioManager.loadSavedScenarios();
-            }
-        };
-
-        // ============================================
-        // PRESET SCENARIOS
-        // Pre-configured retirement scenarios that users can load with one click.
-        // Each preset represents a common retirement situation:
-        // - Conservative: Later retirement, lower risk tolerance
-        // - Moderate: Balanced approach for typical retirees
-        // - Aggressive: Higher returns assumption, more volatility
-        // - Early Retire: FIRE-style early retirement with larger portfolio
-        // ============================================
-        const PresetScenarios = {
-            presets: {
-                conservative: {
-                    name: "Conservative Retirement",
-                    retirementAge: 67,
-                    planningAge: 95,
-                    startingPortfolio: 1000000,
-                    expectedReturn: 4.0,
-                    volatility: 10.0,
-                    inflationRate: 2.5,
-                    minSpending: 40000,
-                    oneTimeExpense: 0,
-                    socialSecurity: 30000,
-                    ssStartAge: 70,
-                    targetSuccessRate: 95,
-                    monteCarloRuns: 5000
-                },
-                moderate: {
-                    name: "Moderate Retirement",
-                    retirementAge: 65,
-                    planningAge: 95,
-                    startingPortfolio: 2000000,
-                    expectedReturn: 5.0,
-                    volatility: 12.0,
-                    inflationRate: 2.5,
-                    minSpending: 80000,
-                    oneTimeExpense: 0,
-                    socialSecurity: 35000,
-                    ssStartAge: 67,
-                    targetSuccessRate: 90,
-                    monteCarloRuns: 5000
-                },
-                aggressive: {
-                    name: "Aggressive Growth",
-                    retirementAge: 60,
-                    planningAge: 95,
-                    startingPortfolio: 3000000,
-                    expectedReturn: 6.5,
-                    volatility: 16.0,
-                    inflationRate: 2.5,
-                    minSpending: 100000,
-                    oneTimeExpense: 0,
-                    socialSecurity: 40000,
-                    ssStartAge: 67,
-                    targetSuccessRate: 85,
-                    monteCarloRuns: 5000
-                },
-                'early-retire': {
-                    name: "Early Retirement",
-                    retirementAge: 50,
-                    planningAge: 95,
-                    startingPortfolio: 5000000,
-                    expectedReturn: 5.0,
-                    volatility: 12.0,
-                    inflationRate: 2.5,
-                    minSpending: 600000,
-                    oneTimeExpense: 0,
-                    socialSecurity: 24000,
-                    ssStartAge: 67,
-                    targetSuccessRate: 90,
-                    monteCarloRuns: 10000
-                }
-            },
-
-            load(presetName) {
-                const preset = this.presets[presetName];
-                if (!preset) return;
-
-                // Populate form fields
-                document.getElementById('retirement-age').value = preset.retirementAge;
-                document.getElementById('planning-age').value = preset.planningAge;
-                document.getElementById('starting-portfolio').value = formatNumber(preset.startingPortfolio);
-                document.getElementById('expected-return').value = preset.expectedReturn.toFixed(1);
-                document.getElementById('volatility').value = preset.volatility.toFixed(1);
-                document.getElementById('inflation-rate').value = preset.inflationRate.toFixed(1);
-                document.getElementById('min-spending').value = formatNumber(preset.minSpending);
-                document.getElementById('one-time-expense').value = formatNumber(preset.oneTimeExpense || 0);
-                document.getElementById('social-security').value = formatNumber(preset.socialSecurity);
-                document.getElementById('ss-start-age').value = preset.ssStartAge;
-                document.getElementById('risk-tolerance').value = preset.targetSuccessRate;
-                document.getElementById('monte-carlo-runs').value = formatNumber(preset.monteCarloRuns);
-
-                UI.showStatus(`Loaded preset: ${preset.name}`, 'success');
-                setTimeout(() => UI.hideStatus(), 2000);
-            }
-        };
-
-        // ============================================
-        // SCENARIO MANAGER MODULE
-        // ============================================
-        const ScenarioManager = {
-            savedScenarios: [],
-
-            saveCurrentScenario() {
-                const name = prompt('Enter a name for this scenario:');
-                if (!name) return;
-
-                const scenario = {
-                    id: Date.now(),
-                    name: name,
-                    timestamp: new Date().toISOString(),
-                    inputs: UI.getInputs(),
-                    results: globalResults
-                };
-
-                this.savedScenarios.push(scenario);
-                localStorage.setItem('retirementScenarios', JSON.stringify(this.savedScenarios));
-                UI.showStatus(`Scenario "${name}" saved!`, 'success');
-                setTimeout(() => UI.hideStatus(), 2000);
-
-                this.displaySavedScenarios();
-            },
-
-            loadSavedScenarios() {
-                const saved = localStorage.getItem('retirementScenarios');
-                if (saved) {
-                    this.savedScenarios = JSON.parse(saved);
-                    this.displaySavedScenarios();
-                }
-            },
-
-            displaySavedScenarios() {
-                // Add saved scenarios section if not exists
-                let container = document.getElementById('saved-scenarios-container');
-                if (!container) {
-                    const assumptionsPanel = document.getElementById('assumptions-panel');
-                    container = document.createElement('div');
-                    container.id = 'saved-scenarios-container';
-                    container.className = 'mt-8 max-w-4xl mx-auto';
-                    assumptionsPanel.querySelector('.max-w-4xl').appendChild(container);
-                }
-
-                if (this.savedScenarios.length === 0) {
-                    container.innerHTML = '';
-                    return;
-                }
-
-                let html = '<div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">';
-                html += '<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">💾 Saved Scenarios</h3>';
-                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
-
-                this.savedScenarios.forEach(scenario => {
-                    html += `<div class="scenario-card border-2 border-gray-300 dark:border-slate-700 rounded-lg p-3 bg-gray-50 dark:bg-slate-950">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">${scenario.name}</h4>
-                            <button onclick="ScenarioManager.deleteScenario(${scenario.id})" class="text-red-600 hover:text-red-700 text-xs">✕</button>
-                        </div>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">${new Date(scenario.timestamp).toLocaleString()}</p>
-                        <button onclick="ScenarioManager.loadScenario(${scenario.id})" class="w-full px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded transition-colors">
-                            Load
-                        </button>
-                    </div>`;
-                });
-
-                html += '</div></div>';
-                container.innerHTML = html;
-            },
-
-            loadScenario(id) {
-                const scenario = this.savedScenarios.find(s => s.id === id);
-                if (!scenario) return;
-
-                // Populate form
-                const inputs = scenario.inputs;
-                document.getElementById('retirement-age').value = inputs.retirementAge;
-                document.getElementById('planning-age').value = inputs.planningAge;
-                document.getElementById('starting-portfolio').value = formatNumber(inputs.startingPortfolio);
-                document.getElementById('expected-return').value = inputs.expectedReturn.toFixed(1);
-                document.getElementById('volatility').value = inputs.volatility.toFixed(1);
-                document.getElementById('inflation-rate').value = inputs.inflationRate.toFixed(1);
-                document.getElementById('min-spending').value = formatNumber(inputs.minSpending);
-                document.getElementById('one-time-expense').value = formatNumber(inputs.oneTimeExpense || 0);
-                document.getElementById('social-security').value = formatNumber(inputs.socialSecurity);
-                document.getElementById('ss-start-age').value = inputs.ssStartAge;
-                document.getElementById('risk-tolerance').value = inputs.targetSuccessRate;
-                document.getElementById('monte-carlo-runs').value = formatNumber(inputs.monteCarloRuns);
-
-                UI.showStatus(`Loaded scenario: ${scenario.name}`, 'success');
-                setTimeout(() => UI.hideStatus(), 2000);
-            },
-
-            deleteScenario(id) {
-                if (!confirm('Delete this scenario?')) return;
-                this.savedScenarios = this.savedScenarios.filter(s => s.id !== id);
-                localStorage.setItem('retirementScenarios', JSON.stringify(this.savedScenarios));
-                this.displaySavedScenarios();
-            }
-        };
-
-        // ============================================
-        // PDF EXPORT MODULE
-        // ============================================
-        const PDFExport = {
-            generate() {
-                if (!globalResults) {
-                    alert('Please run a simulation first!');
-                    return;
-                }
-
-                // Use browser's print functionality with custom print CSS
-                window.print();
             }
         };
 
@@ -3168,9 +2902,6 @@
                 return html;
             }
         };
-
-        // Make functions globally accessible for onclick handlers
-        window.ScenarioManager = ScenarioManager;
 
         // ============================================
         // APPLICATION INITIALIZATION

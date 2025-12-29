@@ -11,7 +11,8 @@
       "Bash(git push:*)",
       "Bash(git remote remove:*)",
       "Bash(brew install:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(node /Users/ameesh/projects/retirement-calculator/comprehensive-tests.js:*)"
     ],
     "deny": [],
     "ask": []
