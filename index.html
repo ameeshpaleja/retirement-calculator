@@ -4,9 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retirement Withdrawal Simulator</title>
+    <meta name="description" content="Monte Carlo retirement withdrawal simulator comparing different withdrawal strategies">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ApexCharts - Interactive animated charts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
+
+    <!-- CountUp.js - Animated number counting -->
+    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.min.js"></script>
+
+    <!-- Tippy.js - Accessible animated tooltips -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/shift-away.css"/>
+
+    <!-- noUiSlider - Beautiful range sliders -->
+    <link href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
 
     <!-- Tailwind Custom Configuration -->
     <script>
@@ -58,9 +74,325 @@
 
     <style>
         /* ============================================
-           CUSTOM TOOLTIP STYLES
-           ============================================
-           Tooltips for info icons and help text */
+           WCAG 2.2 - SKIP NAVIGATION
+           ============================================ */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            z-index: 10000;
+            transition: top 0.3s;
+            border-radius: 0 0 8px 0;
+            font-weight: 600;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* ============================================
+           WCAG 2.2 - REDUCED MOTION SUPPORT
+           ============================================ */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+            .gauge-fill {
+                transition: none !important;
+            }
+        }
+
+        /* ============================================
+           WCAG 2.2 - ENHANCED FOCUS STATES
+           ============================================ */
+        :focus-visible {
+            outline: 3px solid #3b82f6;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        .dark :focus-visible {
+            outline-color: #60a5fa;
+        }
+
+        /* Remove default focus for mouse users */
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        /* ============================================
+           GLASSMORPHISM CARD EFFECTS
+           ============================================ */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ============================================
+           MODERN GRADIENT BACKGROUNDS
+           ============================================ */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-bg-subtle {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+        }
+
+        .dark .gradient-bg-subtle {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        /* ============================================
+           ANIMATED GRADIENT BORDER
+           ============================================ */
+        @keyframes gradientBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .gradient-border {
+            position: relative;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+            background-size: 300% 300%;
+            animation: gradientBorder 4s ease infinite;
+            padding: 2px;
+            border-radius: 12px;
+        }
+
+        .gradient-border > * {
+            background: white;
+            border-radius: 10px;
+        }
+
+        .dark .gradient-border > * {
+            background: #0f172a;
+        }
+
+        /* ============================================
+           ENHANCED CARD HOVER EFFECTS
+           ============================================ */
+        .hover-lift {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        box-shadow 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .hover-lift:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* ============================================
+           GLOW EFFECTS
+           ============================================ */
+        .glow-success {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3),
+                        0 0 40px rgba(34, 197, 94, 0.1);
+        }
+
+        .glow-warning {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3),
+                        0 0 40px rgba(245, 158, 11, 0.1);
+        }
+
+        .glow-danger {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3),
+                        0 0 40px rgba(239, 68, 68, 0.1);
+        }
+
+        .glow-primary {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3),
+                        0 0 40px rgba(59, 130, 246, 0.1);
+        }
+
+        /* ============================================
+           BUTTON MICRO-INTERACTIONS
+           ============================================ */
+        .btn-interactive {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-interactive::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .btn-interactive:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-interactive:active {
+            transform: scale(0.98);
+        }
+
+        /* ============================================
+           noUiSlider CUSTOM STYLING
+           ============================================ */
+        .noUi-target {
+            background: #e2e8f0;
+            border: none;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            height: 8px;
+        }
+
+        .dark .noUi-target {
+            background: #334155;
+        }
+
+        .noUi-connect {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 8px;
+        }
+
+        .noUi-handle {
+            width: 24px !important;
+            height: 24px !important;
+            right: -12px !important;
+            top: -9px !important;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .noUi-handle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .noUi-handle:active {
+            cursor: grabbing;
+            transform: scale(1.15);
+        }
+
+        .noUi-handle::before,
+        .noUi-handle::after {
+            display: none;
+        }
+
+        .dark .noUi-handle {
+            background: #1e293b;
+            border-color: #60a5fa;
+        }
+
+        .noUi-tooltip {
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* ============================================
+           TIPPY.JS CUSTOM THEME
+           ============================================ */
+        .tippy-box[data-theme~='custom'] {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: #f1f5f9;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            font-size: 0.875rem;
+            padding: 4px;
+        }
+
+        .tippy-box[data-theme~='custom'] .tippy-arrow {
+            color: #1e293b;
+        }
+
+        .tippy-box[data-theme~='custom'] .tippy-content {
+            padding: 10px 14px;
+        }
+
+        /* ============================================
+           ANIMATED NUMBER DISPLAY
+           ============================================ */
+        .animated-number {
+            display: inline-block;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ============================================
+           SUCCESS RATE RING ANIMATION
+           ============================================ */
+        @keyframes ringPulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 2px currentColor);
+            }
+            50% {
+                filter: drop-shadow(0 0 8px currentColor);
+            }
+        }
+
+        .ring-pulse {
+            animation: ringPulse 2s ease-in-out infinite;
+        }
+
+        /* ============================================
+           STAGGER ANIMATION FOR LISTS
+           ============================================ */
+        @keyframes staggerFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-item {
+            opacity: 0;
+            animation: staggerFadeIn 0.4s ease forwards;
+        }
+
+        .stagger-item:nth-child(1) { animation-delay: 0.05s; }
+        .stagger-item:nth-child(2) { animation-delay: 0.1s; }
+        .stagger-item:nth-child(3) { animation-delay: 0.15s; }
+        .stagger-item:nth-child(4) { animation-delay: 0.2s; }
+        .stagger-item:nth-child(5) { animation-delay: 0.25s; }
+        .stagger-item:nth-child(6) { animation-delay: 0.3s; }
+
+        /* ============================================
+           CUSTOM TOOLTIP STYLES (Legacy fallback)
+           ============================================ */
         .tooltip {
             position: relative;
             display: inline-block;
@@ -97,20 +429,10 @@
             border-color: #1e293b transparent transparent transparent;
         }
 
-        .tooltip:hover .tooltiptext {
+        .tooltip:hover .tooltiptext,
+        .tooltip:focus-within .tooltiptext {
             visibility: visible;
             opacity: 1;
-        }
-
-        /* Light mode tooltip styling */
-        body:not(.dark) .tooltip .tooltiptext {
-            background-color: #1e293b;
-            color: #f1f5f9;
-            border: 1px solid #334155;
-        }
-
-        body:not(.dark) .tooltip .tooltiptext::after {
-            border-color: #1e293b transparent transparent transparent;
         }
 
         /* ============================================
@@ -123,23 +445,28 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: white;
             font-size: 12px;
             font-weight: bold;
             cursor: help;
             margin-left: 4px;
             flex-shrink: 0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .info-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
 
         .dark .info-icon {
-            background: #60a5fa;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
         }
 
         /* ============================================
-           SMOOTH TRANSITIONS
-           ============================================
-           All color changes animate smoothly */
+           SMOOTH TRANSITIONS (with reduced motion respect)
+           ============================================ */
         * {
             transition-property: background-color, border-color, color;
             transition-duration: 200ms;
@@ -158,13 +485,28 @@
            PROGRESS BAR ANIMATION
            ============================================ */
         @keyframes progressBar {
-            from {
-                width: 0;
-            }
+            from { width: 0; }
         }
 
         .progress-bar-animated {
             animation: progressBar 1.5s ease-out forwards;
+        }
+
+        /* Shimmer loading effect */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .dark .shimmer {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
         }
 
         /* ============================================
@@ -182,8 +524,7 @@
 
         /* ============================================
            CHART TOOLTIP STYLES
-           ============================================
-           Tooltips that appear on chart hover */
+           ============================================ */
         #chart-tooltip {
             position: absolute;
             background: rgba(30, 41, 59, 0.95);
@@ -195,15 +536,11 @@
             z-index: 1000;
             white-space: nowrap;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        body:not(.dark) #chart-tooltip {
-            background: rgba(30, 41, 59, 0.95);
-            color: #f1f5f9;
+            backdrop-filter: blur(4px);
         }
 
         /* ============================================
-           SUCCESS RATE GAUGE
+           SUCCESS RATE GAUGE - ENHANCED
            ============================================ */
         .gauge-container {
             position: relative;
@@ -216,36 +553,43 @@
             fill: none;
             stroke-width: 12;
             stroke-linecap: round;
-            transition: stroke-dashoffset 1s ease-out, stroke 0.3s ease;
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+                        stroke 0.3s ease;
         }
 
         /* ============================================
-           SCENARIO CARDS
+           SCENARIO CARDS - ENHANCED
            ============================================ */
         .scenario-card {
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             cursor: pointer;
         }
 
         .scenario-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .dark .scenario-card:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
         .scenario-card.active {
             border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
         }
 
         /* ============================================
            HISTOGRAM BARS
            ============================================ */
         .histogram-bar {
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .histogram-bar:hover {
             opacity: 0.8;
+            transform: scaleY(1.02);
+            transform-origin: bottom;
         }
 
         /* ============================================
@@ -256,7 +600,7 @@
                 background: white !important;
             }
 
-            header, .no-print {
+            header, .no-print, .skip-link {
                 display: none !important;
             }
 
@@ -272,14 +616,19 @@
             .page-break {
                 page-break-after: always;
             }
+
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
         }
 
         /* ============================================
            INSIGHTS PANEL ANIMATIONS
            ============================================ */
         @keyframes insightPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.005); }
         }
 
         .insight-warning {
@@ -292,35 +641,120 @@
         @keyframes chartFadeIn {
             from {
                 opacity: 0;
-                transform: scale(0.98);
+                transform: scale(0.96) translateY(10px);
             }
             to {
                 opacity: 1;
-                transform: scale(1);
+                transform: scale(1) translateY(0);
             }
         }
 
         canvas.chart-animated {
-            animation: chartFadeIn 0.5s ease-out;
+            animation: chartFadeIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         /* ============================================
            SMOOTH TAB TRANSITIONS
            ============================================ */
         .tab-content {
-            transition: opacity 0.3s ease-in-out;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
         .tab-content.hidden {
             opacity: 0;
+            transform: translateY(5px);
         }
 
         .tab-button {
-            transition: all 0.2s ease;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+
+        .tab-button[aria-selected="true"]::after,
+        .tab-button.active::after {
+            width: 100%;
+            left: 0;
+        }
+
+        /* ============================================
+           FLOATING ACTION ANIMATION
+           ============================================ */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* ============================================
+           CONFETTI CELEBRATION (for high success rates)
+           ============================================ */
+        @keyframes confetti {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: 0;
+            animation: confetti 3s ease-in-out forwards;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* ============================================
+           APEXCHARTS CUSTOM STYLING
+           ============================================ */
+        .apexcharts-tooltip {
+            background: rgba(30, 41, 59, 0.95) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .apexcharts-tooltip-title {
+            background: rgba(51, 65, 85, 0.8) !important;
+            border-bottom: none !important;
+            color: #f1f5f9 !important;
+        }
+
+        .apexcharts-tooltip-text {
+            color: #f1f5f9 !important;
+        }
+
+        .dark .apexcharts-xaxis-label,
+        .dark .apexcharts-yaxis-label {
+            fill: #94a3b8 !important;
+        }
+
+        .apexcharts-bar-area:hover {
+            filter: brightness(1.1);
         }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
+    <!-- WCAG 2.2: Skip Navigation Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ARIA Live Region for Dynamic Updates -->
+    <div id="aria-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
     <!-- ============================================
          MAIN APP CONTAINER
          ============================================ -->
@@ -357,7 +791,7 @@
         <!-- ============================================
              MAIN CONTENT AREA
              ============================================ -->
-        <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 w-full">
+        <main id="main-content" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 w-full" role="main">
 
             <!-- ============================================
                  ASSUMPTIONS PANEL - SHOWN INITIALLY
@@ -649,10 +1083,19 @@
 
                     <!-- Run Button -->
                     <div class="mt-8 text-center">
-                        <button id="run-simulation"
-                            class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-12 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 text-lg">
-                            Run Simulation
-                        </button>
+                        <div class="gradient-border inline-block">
+                            <button id="run-simulation"
+                                class="btn-interactive bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-500 hover:to-purple-500 text-white font-semibold py-4 px-12 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 text-lg"
+                                aria-describedby="simulation-description">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    Run Simulation
+                                </span>
+                            </button>
+                        </div>
+                        <p id="simulation-description" class="sr-only">Runs Monte Carlo simulation with your configured assumptions</p>
                     </div>
 
                     <!-- Status Message -->
@@ -2197,11 +2640,16 @@
                     Charts.drawLineChart(document.getElementById('chart-portfolio'), portfolioData, 'Portfolio Value (Median Path)');
                     Charts.drawLineChart(document.getElementById('chart-withdrawals'), withdrawalData, 'Annual Withdrawals (Median Path)');
 
-                    // Draw histograms
+                    // Draw histograms using ApexCharts
+                    DistributionHistogram.destroyAll(); // Clean up previous charts
                     strategies.forEach(strategy => {
                         const histogramContainer = document.getElementById(`histogram-${strategy.name}`);
                         if (histogramContainer) {
                             histogramContainer.innerHTML = DistributionHistogram.render(results, strategy.name);
+                            // Render ApexChart after container is in DOM
+                            setTimeout(() => {
+                                DistributionHistogram.renderApexChart(results, strategy.name);
+                            }, 50);
                         }
                     });
                 }, 100);
@@ -2477,6 +2925,8 @@
             init() {
                 this.initTabs();
                 this.initThemeToggle();
+                this.initTippyTooltips();
+                this.initAccessibility();
 
                 // Run simulation button
                 document.getElementById('run-simulation').addEventListener('click', () => {
@@ -2490,6 +2940,75 @@
                     document.getElementById('back-to-assumptions').classList.add('hidden');
                 });
 
+            },
+
+            /**
+             * Initialize Tippy.js tooltips for all info icons
+             * WCAG 2.2 compliant with keyboard support
+             */
+            initTippyTooltips() {
+                if (typeof tippy === 'undefined') return;
+
+                // Find all tooltip elements and convert to Tippy
+                document.querySelectorAll('.tooltip').forEach(tooltip => {
+                    const content = tooltip.querySelector('.tooltiptext');
+                    if (!content) return;
+
+                    const infoIcon = tooltip.querySelector('.info-icon');
+                    if (!infoIcon) return;
+
+                    // Make info icon focusable for keyboard users
+                    infoIcon.setAttribute('tabindex', '0');
+                    infoIcon.setAttribute('role', 'button');
+                    infoIcon.setAttribute('aria-label', 'More information');
+
+                    tippy(infoIcon, {
+                        content: content.textContent,
+                        theme: 'custom',
+                        animation: 'shift-away',
+                        placement: 'top',
+                        trigger: 'mouseenter focus',
+                        interactive: true,
+                        allowHTML: false,
+                        maxWidth: 300,
+                        // WCAG: Tooltip stays open on hover
+                        hideOnClick: false,
+                        // WCAG: Support keyboard navigation
+                        appendTo: document.body
+                    });
+
+                    // Hide the original tooltiptext since Tippy handles it now
+                    content.style.display = 'none';
+                });
+            },
+
+            /**
+             * Initialize accessibility features
+             */
+            initAccessibility() {
+                // Announce dynamic content changes to screen readers
+                this.ariaLive = document.getElementById('aria-live');
+
+                // Check for reduced motion preference
+                this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                // Listen for changes in motion preference
+                window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+                    this.prefersReducedMotion = e.matches;
+                });
+            },
+
+            /**
+             * Announce message to screen readers
+             */
+            announceToScreenReader(message) {
+                if (this.ariaLive) {
+                    this.ariaLive.textContent = message;
+                    // Clear after announcement
+                    setTimeout(() => {
+                        this.ariaLive.textContent = '';
+                    }, 1000);
+                }
             }
         };
 
@@ -2946,130 +3465,308 @@
 
         // ============================================
         // DISTRIBUTION HISTOGRAM
-        // Renders an SVG histogram showing the spread of final portfolio values
-        // across all Monte Carlo simulations. Red bars = portfolio depleted ($0).
+        // Renders an interactive ApexCharts histogram showing the spread of
+        // final portfolio values across all Monte Carlo simulations.
+        // Features: Animated bars, hover tooltips, percentile annotations
         // Uses 2nd-98th percentile range to minimize dead space from outliers.
         // ============================================
         const DistributionHistogram = {
+            charts: {}, // Store chart instances for cleanup
+
             render(results, strategyName) {
                 const strategy = results[strategyName];
                 if (!strategy || !strategy.allFinalValues) return '';
 
+                // Generate unique ID for this chart
+                const chartId = `apex-histogram-${strategyName}`;
+
+                // Return container, chart will be rendered after DOM insertion
+                return `<div id="${chartId}" class="histogram-chart" data-strategy="${strategyName}" style="min-height: 300px;"></div>`;
+            },
+
+            // Call this after the container is added to DOM
+            renderApexChart(results, strategyName) {
+                const strategy = results[strategyName];
+                if (!strategy || !strategy.allFinalValues) return;
+
+                const chartId = `apex-histogram-${strategyName}`;
+                const container = document.getElementById(chartId);
+                if (!container) return;
+
+                // Destroy previous chart if exists
+                if (this.charts[strategyName]) {
+                    this.charts[strategyName].destroy();
+                }
+
                 const values = strategy.allFinalValues;
                 const sorted = [...values].sort((a, b) => a - b);
 
-                // Use 2nd-98th percentile to clip outliers and reduce dead space
+                // Calculate percentiles
                 const p2 = this.calculatePercentile(sorted, 2);
+                const p25 = this.calculatePercentile(sorted, 25);
+                const p50 = this.calculatePercentile(sorted, 50);
+                const p75 = this.calculatePercentile(sorted, 75);
+                const p95 = this.calculatePercentile(sorted, 95);
                 const p98 = this.calculatePercentile(sorted, 98);
-                const displayMin = Math.min(0, p2);  // Always show $0 if any failures
-                const displayMax = p98 * 1.05;       // Small buffer on high end
 
-                const binCount = 25;  // Fewer bins = denser bars
+                const displayMin = Math.min(0, p2);
+                const displayMax = p98 * 1.05;
+                const binCount = 20;
                 const binWidth = (displayMax - displayMin) / binCount;
 
-                // Count values in each bin (exclude outliers beyond display range)
+                // Count values in each bin
                 const bins = Array(binCount).fill(0);
+                const categories = [];
                 let excludedHigh = 0;
-                let excludedLow = 0;
+
+                for (let i = 0; i < binCount; i++) {
+                    const binStart = displayMin + i * binWidth;
+                    const binEnd = binStart + binWidth;
+                    categories.push(Charts.formatCurrency((binStart + binEnd) / 2, true));
+                }
+
                 values.forEach(val => {
-                    // Skip values outside display range instead of clamping
                     if (val > displayMax) {
                         excludedHigh++;
                         return;
                     }
-                    if (val < displayMin) {
-                        excludedLow++;
-                        return;
-                    }
+                    if (val < displayMin) return;
                     const binIndex = Math.min(Math.floor((val - displayMin) / binWidth), binCount - 1);
                     bins[binIndex]++;
                 });
 
-                const maxBinHeight = Math.max(...bins);
-                const isDark = document.documentElement.classList.contains('dark');
-                const bgColor = isDark ? '#020617' : '#ffffff';
-                const textColor = isDark ? '#e2e8f0' : '#1f2937';
-
-                // Compact dimensions with tighter margins
-                const width = 700;
-                const height = 280;
-                const margin = { top: 35, right: 25, bottom: 45, left: 65 };
-                const chartWidth = width - margin.left - margin.right;
-                const chartHeight = height - margin.top - margin.bottom;
-
-                let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="mx-auto w-full max-w-2xl">`;
-                svg += `<rect width="${width}" height="${height}" fill="${bgColor}"/>`;
-
-                // Draw bars - thicker with minimal gaps
-                const barWidth = chartWidth / binCount;
-                bins.forEach((count, i) => {
-                    if (count === 0) return;  // Skip empty bins
-                    const barHeight = Math.max(2, (count / maxBinHeight) * chartHeight);
-                    const x = margin.left + i * barWidth;
-                    const y = margin.top + chartHeight - barHeight;
-
+                // Create color array (red for $0 bin, gradient for rest)
+                const colors = bins.map((_, i) => {
                     const binValue = displayMin + i * binWidth;
-                    const isFailure = binValue <= 0;
-                    const color = isFailure ? '#ef4444' : '#3b82f6';
-
-                    svg += `<rect x="${x}" y="${y}" width="${barWidth - 1}" height="${barHeight}" fill="${color}" opacity="0.8"/>`;
+                    if (binValue <= 0) return '#ef4444'; // Red for depleted
+                    return '#3b82f6'; // Blue for positive
                 });
 
-                // Axes
-                svg += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + chartHeight}" stroke="${textColor}" stroke-width="1.5"/>`;
-                svg += `<line x1="${margin.left}" y1="${margin.top + chartHeight}" x2="${margin.left + chartWidth}" y2="${margin.top + chartHeight}" stroke="${textColor}" stroke-width="1.5"/>`;
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#e2e8f0' : '#1f2937';
+                const gridColor = isDark ? '#334155' : '#e2e8f0';
 
-                // Title and axis labels
-                svg += `<text x="${margin.left + chartWidth / 2}" y="${margin.top - 12}" text-anchor="middle" fill="${textColor}" font-size="14" font-weight="600">Final Portfolio Distribution (Today's Dollars)</text>`;
-                svg += `<text x="${margin.left + chartWidth / 2}" y="${height - 8}" text-anchor="middle" fill="${textColor}" font-size="11">Final Portfolio Value</text>`;
-                svg += `<text x="14" y="${margin.top + chartHeight / 2}" text-anchor="middle" transform="rotate(-90, 14, ${margin.top + chartHeight / 2})" fill="${textColor}" font-size="11">Count</text>`;
+                // Check for reduced motion preference
+                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-                // X-axis labels (4 tick marks for cleaner look)
-                for (let i = 0; i <= 4; i++) {
-                    const value = displayMin + (displayMax - displayMin) * (i / 4);
-                    const x = margin.left + (chartWidth * i / 4);
-                    svg += `<text x="${x}" y="${margin.top + chartHeight + 16}" text-anchor="middle" fill="${textColor}" font-size="10">${Charts.formatCurrency(value, true)}</text>`;
-                }
-
-                // Percentile markers: 25th, 50th (median), 75th, 95th
-                const percentileConfig = [
-                    { p: 25, color: '#f59e0b', label: 'P25' },   // amber
-                    { p: 50, color: '#22c55e', label: 'P50' },   // green (median)
-                    { p: 75, color: '#3b82f6', label: 'P75' },   // blue
-                    { p: 95, color: '#8b5cf6', label: 'P95' }    // purple
-                ];
-
-                percentileConfig.forEach(({ p, color, label }) => {
-                    const pValue = this.calculatePercentile(sorted, p);
-                    // Only draw if percentile is within display range
-                    if (pValue >= displayMin && pValue <= displayMax) {
-                        const pX = margin.left + ((pValue - displayMin) / (displayMax - displayMin)) * chartWidth;
-                        // Clamp X position to stay within chart area
-                        const clampedX = Math.max(margin.left + 2, Math.min(margin.left + chartWidth - 2, pX));
-                        svg += `<line x1="${clampedX}" y1="${margin.top}" x2="${clampedX}" y2="${margin.top + chartHeight}" stroke="${color}" stroke-width="2" stroke-dasharray="4,3"/>`;
-                        svg += `<text x="${clampedX}" y="${margin.top - 3}" text-anchor="middle" fill="${color}" font-size="9" font-weight="600">${label}</text>`;
+                const options = {
+                    series: [{
+                        name: 'Simulations',
+                        data: bins
+                    }],
+                    chart: {
+                        type: 'bar',
+                        height: 300,
+                        background: 'transparent',
+                        animations: {
+                            enabled: !prefersReducedMotion,
+                            speed: 800,
+                            animateGradually: {
+                                enabled: true,
+                                delay: 50
+                            },
+                            dynamicAnimation: {
+                                enabled: true,
+                                speed: 350
+                            }
+                        },
+                        toolbar: {
+                            show: false
+                        },
+                        fontFamily: 'inherit'
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 2,
+                            columnWidth: '90%',
+                            distributed: true,
+                            dataLabels: {
+                                position: 'top'
+                            }
+                        }
+                    },
+                    colors: colors,
+                    dataLabels: {
+                        enabled: false
+                    },
+                    legend: {
+                        show: false
+                    },
+                    title: {
+                        text: 'Final Portfolio Distribution (Today\'s Dollars)',
+                        align: 'center',
+                        style: {
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: textColor
+                        }
+                    },
+                    subtitle: {
+                        text: excludedHigh > 0 ? `${((excludedHigh / values.length) * 100).toFixed(1)}% exceeded ${Charts.formatCurrency(displayMax, true)}` : '',
+                        align: 'right',
+                        style: {
+                            fontSize: '10px',
+                            color: textColor,
+                            opacity: 0.6
+                        }
+                    },
+                    xaxis: {
+                        categories: categories,
+                        labels: {
+                            style: {
+                                colors: textColor,
+                                fontSize: '10px'
+                            },
+                            rotate: -45,
+                            rotateAlways: true,
+                            hideOverlappingLabels: true
+                        },
+                        title: {
+                            text: 'Final Portfolio Value',
+                            style: {
+                                color: textColor,
+                                fontSize: '11px'
+                            }
+                        },
+                        axisBorder: {
+                            color: gridColor
+                        },
+                        axisTicks: {
+                            color: gridColor
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Count',
+                            style: {
+                                color: textColor,
+                                fontSize: '11px'
+                            }
+                        },
+                        labels: {
+                            style: {
+                                colors: textColor,
+                                fontSize: '10px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: gridColor,
+                        strokeDashArray: 4
+                    },
+                    tooltip: {
+                        theme: 'dark',
+                        y: {
+                            formatter: (val) => `${val.toLocaleString()} simulations`
+                        }
+                    },
+                    annotations: {
+                        xaxis: [
+                            {
+                                x: this.findBinCategory(p25, displayMin, binWidth, categories),
+                                borderColor: '#f59e0b',
+                                borderWidth: 2,
+                                strokeDashArray: 4,
+                                label: {
+                                    text: `P25: ${Charts.formatCurrency(p25, true)}`,
+                                    borderColor: '#f59e0b',
+                                    style: {
+                                        color: '#fff',
+                                        background: '#f59e0b',
+                                        fontSize: '10px',
+                                        fontWeight: 600
+                                    }
+                                }
+                            },
+                            {
+                                x: this.findBinCategory(p50, displayMin, binWidth, categories),
+                                borderColor: '#22c55e',
+                                borderWidth: 2,
+                                strokeDashArray: 4,
+                                label: {
+                                    text: `Median: ${Charts.formatCurrency(p50, true)}`,
+                                    borderColor: '#22c55e',
+                                    style: {
+                                        color: '#fff',
+                                        background: '#22c55e',
+                                        fontSize: '10px',
+                                        fontWeight: 600
+                                    }
+                                }
+                            },
+                            {
+                                x: this.findBinCategory(p75, displayMin, binWidth, categories),
+                                borderColor: '#3b82f6',
+                                borderWidth: 2,
+                                strokeDashArray: 4,
+                                label: {
+                                    text: `P75: ${Charts.formatCurrency(p75, true)}`,
+                                    borderColor: '#3b82f6',
+                                    style: {
+                                        color: '#fff',
+                                        background: '#3b82f6',
+                                        fontSize: '10px',
+                                        fontWeight: 600
+                                    }
+                                }
+                            },
+                            {
+                                x: this.findBinCategory(p95, displayMin, binWidth, categories),
+                                borderColor: '#8b5cf6',
+                                borderWidth: 2,
+                                strokeDashArray: 4,
+                                label: {
+                                    text: `P95: ${Charts.formatCurrency(p95, true)}`,
+                                    borderColor: '#8b5cf6',
+                                    style: {
+                                        color: '#fff',
+                                        background: '#8b5cf6',
+                                        fontSize: '10px',
+                                        fontWeight: 600
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    states: {
+                        hover: {
+                            filter: {
+                                type: 'lighten',
+                                value: 0.1
+                            }
+                        },
+                        active: {
+                            filter: {
+                                type: 'darken',
+                                value: 0.1
+                            }
+                        }
                     }
-                });
+                };
 
-                // Add note about excluded outliers if any
-                if (excludedHigh > 0 || excludedLow > 0) {
-                    const totalExcluded = excludedHigh + excludedLow;
-                    const pctExcluded = ((totalExcluded / values.length) * 100).toFixed(1);
-                    let noteText = `${pctExcluded}% of outcomes outside display range`;
-                    if (excludedHigh > 0 && excludedLow === 0) {
-                        noteText = `${pctExcluded}% exceeded ${Charts.formatCurrency(displayMax, true)}`;
-                    }
-                    svg += `<text x="${width - margin.right}" y="${height - 8}" text-anchor="end" fill="${textColor}" font-size="9" opacity="0.6">${noteText}</text>`;
-                }
+                // Create and store chart instance
+                this.charts[strategyName] = new ApexCharts(container, options);
+                this.charts[strategyName].render();
+            },
 
-                svg += '</svg>';
-                return svg;
+            findBinCategory(value, displayMin, binWidth, categories) {
+                const binIndex = Math.floor((value - displayMin) / binWidth);
+                const clampedIndex = Math.max(0, Math.min(binIndex, categories.length - 1));
+                return categories[clampedIndex];
             },
 
             calculatePercentile(values, percentile) {
                 const sorted = [...values].sort((a, b) => a - b);
                 const index = Math.floor(sorted.length * percentile / 100);
                 return sorted[index];
+            },
+
+            // Cleanup all charts
+            destroyAll() {
+                Object.values(this.charts).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                this.charts = {};
             }
         };
 
