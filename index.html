@@ -94,21 +94,137 @@
         }
 
         /* ============================================
-           WCAG 2.2 - REDUCED MOTION SUPPORT
+           ENHANCED ANIMATIONS
            ============================================ */
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
 
-            .gauge-fill {
-                transition: none !important;
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-3deg); }
+            75% { transform: rotate(3deg); }
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.8), 0 0 50px rgba(139, 92, 246, 0.4); }
+        }
+
+        @keyframes text-shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes border-dance {
+            0% { border-color: #3b82f6; }
+            25% { border-color: #8b5cf6; }
+            50% { border-color: #ec4899; }
+            75% { border-color: #f59e0b; }
+            100% { border-color: #3b82f6; }
+        }
+
+        @keyframes success-celebration {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            50% { transform: scale(1.2) rotate(5deg); }
+            75% { transform: scale(1.1) rotate(-3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .animate-bounce-slow {
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .animate-wiggle {
+            animation: wiggle 0.5s ease-in-out;
+        }
+
+        .animate-glow {
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        .animate-border-dance {
+            animation: border-dance 4s linear infinite;
+        }
+
+        .text-gradient-animated {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: text-shimmer 3s linear infinite;
+        }
+
+        .celebrate {
+            animation: success-celebration 0.6s ease-out;
+        }
+
+        /* Sparkle effect for success states */
+        @keyframes sparkle {
+            0%, 100% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
             }
+            50% {
+                transform: scale(1) rotate(180deg);
+                opacity: 1;
+            }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(45deg, #fbbf24, #f59e0b);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+
+        /* Smooth breathing animation for cards */
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.005); }
+        }
+
+        .animate-breathe {
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        /* Shimmer loading effect */
+        @keyframes shimmer-loading {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .shimmer-loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 1000px 100%;
+            animation: shimmer-loading 2s infinite;
+        }
+
+        /* Rotating gradient border */
+        @keyframes rotate-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .rotating-border {
+            background: linear-gradient(-45deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b, #3b82f6);
+            background-size: 400% 400%;
+            animation: rotate-gradient 3s ease infinite;
         }
 
         /* ============================================
@@ -767,7 +883,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        <h1 class="text-xl sm:text-2xl font-bold text-gradient-animated">
                             Retirement Withdrawal Simulator
                         </h1>
                         <!-- Back to Assumptions button (hidden initially) -->
@@ -807,7 +923,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         <!-- Plan Setup Card -->
-                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6 hover-lift glass-card stagger-item" style="animation-delay: 0.1s">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                                 Plan Setup
                                 <span class="tooltip ml-2">
@@ -855,11 +971,27 @@
                                             class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                     </div>
                                 </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Starting Annual Withdrawal ($/year)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Your desired annual withdrawal amount in year one of retirement. This overrides the default percentage-based calculations (e.g., 4% rule). Set to $0 to use each strategy's default calculation.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
+                                        <input type="text" id="starting-withdrawal" value="120,000"
+                                            class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Set to $0 to use default strategy calculations</p>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Market Assumptions Card -->
-                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6 hover-lift glass-card stagger-item" style="animation-delay: 0.2s">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                                 Market Assumptions
                                 <span class="tooltip ml-2">
@@ -929,7 +1061,7 @@
                         </div>
 
                         <!-- Income & Constraints Card -->
-                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6 hover-lift glass-card stagger-item" style="animation-delay: 0.3s">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Income & Constraints</h3>
 
                             <div class="space-y-4">
@@ -946,7 +1078,23 @@
                                         <input type="text" id="min-spending" value="100,000"
                                             class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                     </div>
-                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">In today's purchasing power (inflation-adjusted)</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Floor: withdrawals won't go below this amount</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Maximum Acceptable Spending ($/year, today's dollars)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Your maximum spending cap in today's purchasing power. Even if the strategy calculates a higher withdrawal, it will be capped at this amount. Set to $0 for no cap.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
+                                        <input type="text" id="max-spending" value="0"
+                                            class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Cap: withdrawals won't exceed this. Set to $0 for no cap.</p>
                                 </div>
 
                                 <div>
@@ -1013,7 +1161,7 @@
                         </div>
 
                         <!-- Withdrawal Strategies Card -->
-                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6 hover-lift glass-card stagger-item" style="animation-delay: 0.4s">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Withdrawal Strategies</h3>
 
                             <div class="space-y-3">
@@ -1083,12 +1231,12 @@
 
                     <!-- Run Button -->
                     <div class="mt-8 text-center">
-                        <div class="gradient-border inline-block">
+                        <div class="gradient-border inline-block animate-glow">
                             <button id="run-simulation"
-                                class="btn-interactive bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-500 hover:to-purple-500 text-white font-semibold py-4 px-12 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 text-lg"
+                                class="btn-interactive bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-500 hover:to-purple-500 text-white font-semibold py-4 px-12 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 text-lg animate-pulse-slow"
                                 aria-describedby="simulation-description">
                                 <span class="flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 animate-bounce-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
                                     Run Simulation
@@ -1375,10 +1523,21 @@
             strategyConstantReal(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
                 const initialRate = 4.5; // 4.5% initial withdrawal rate
-                // Use the greater of 4.5% rule OR the specified minimum spending
-                const calculatedWithdrawal = inputs.startingPortfolio * (initialRate / 100);
-                const initialWithdrawal = Math.max(calculatedWithdrawal, inputs.minSpending || 0);
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
+                // Use startingWithdrawal if specified, otherwise use 4.5% rule
+                let baseWithdrawal;
+                if (inputs.startingWithdrawal && inputs.startingWithdrawal > 0) {
+                    baseWithdrawal = inputs.startingWithdrawal;
+                } else {
+                    baseWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+                }
+
+                // Apply min/max spending constraints
+                let initialWithdrawal = Math.max(baseWithdrawal, inputs.minSpending || 0);
+                if (inputs.maxSpending && inputs.maxSpending > 0) {
+                    initialWithdrawal = Math.min(initialWithdrawal, inputs.maxSpending);
+                }
 
                 let portfolio = inputs.startingPortfolio;
                 let withdrawal = initialWithdrawal;
@@ -1386,9 +1545,17 @@
                 let ruined = false;
                 let ruinAge = null;
 
+                const baseMaxSpending = inputs.maxSpending || 0;
+
                 for (let i = 0; i < years; i++) {
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
+
+                    // Apply max spending cap (inflation-adjusted) if specified
+                    if (baseMaxSpending > 0) {
+                        const inflationAdjustedMaxSpending = baseMaxSpending * Math.pow(inflationMultiplier, i);
+                        withdrawal = Math.min(withdrawal, inflationAdjustedMaxSpending);
+                    }
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1452,6 +1619,8 @@
                 const withdrawalRate = 4.0; // 4% each year
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
                 const baseMinSpending = inputs.minSpending || 0;
+                const baseMaxSpending = inputs.maxSpending || 0;
+                const baseStartingWithdrawal = inputs.startingWithdrawal || 0;
 
                 let portfolio = inputs.startingPortfolio;
                 const yearResults = [];
@@ -1462,8 +1631,10 @@
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
 
-                    // Min spending grows with inflation to maintain purchasing power
+                    // Min/max spending grows with inflation to maintain purchasing power
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+                    const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
+                    const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1472,9 +1643,15 @@
                     // Social Security with COLA adjustment
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
-                    // Withdrawal is the greater of 4% of portfolio or minSpending
+
+                    // Withdrawal is the greater of: 4% of portfolio, minSpending, or startingWithdrawal
                     const percentWithdrawal = portfolio * (withdrawalRate / 100);
-                    const targetWithdrawal = Math.max(percentWithdrawal, inflationAdjustedMinSpending);
+                    let targetWithdrawal = Math.max(percentWithdrawal, inflationAdjustedMinSpending);
+                    if (inflationAdjustedStartingWithdrawal > 0) {
+                        targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+                    }
+                    // Apply max spending cap
+                    targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
                     portfolio -= netWithdrawal;
@@ -1524,6 +1701,8 @@
                 const years = inputs.planningAge - inputs.retirementAge;
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
                 const baseMinSpending = inputs.minSpending || 0;
+                const baseMaxSpending = inputs.maxSpending || 0;
+                const baseStartingWithdrawal = inputs.startingWithdrawal || 0;
 
                 let portfolio = inputs.startingPortfolio;
                 const yearResults = [];
@@ -1534,6 +1713,8 @@
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+                    const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
+                    const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1546,7 +1727,12 @@
                     const yearsRemaining = inputs.planningAge - age;
                     const vpwPct = this.vpwPercentage(yearsRemaining, 60);
                     const vpwWithdrawal = portfolio * (vpwPct / 100);
-                    const targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
+                    let targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
+                    if (inflationAdjustedStartingWithdrawal > 0) {
+                        targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+                    }
+                    // Apply max spending cap
+                    targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
                     portfolio -= netWithdrawal;
@@ -1601,11 +1787,24 @@
                 const adjustmentFactor = 0.10; // 10% spending adjustment
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
                 const baseMinSpending = inputs.minSpending || 0;
+                const baseMaxSpending = inputs.maxSpending || 0;
 
                 let portfolio = inputs.startingPortfolio;
-                // Initial withdrawal is the greater of 5% or minSpending
-                const calculatedWithdrawal = inputs.startingPortfolio * (initialRate / 100);
-                let withdrawal = Math.max(calculatedWithdrawal, baseMinSpending);
+
+                // Use startingWithdrawal if specified, otherwise use 5% rule
+                let baseWithdrawal;
+                if (inputs.startingWithdrawal && inputs.startingWithdrawal > 0) {
+                    baseWithdrawal = inputs.startingWithdrawal;
+                } else {
+                    baseWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+                }
+
+                // Apply min/max spending constraints to initial withdrawal
+                let withdrawal = Math.max(baseWithdrawal, baseMinSpending);
+                if (baseMaxSpending > 0) {
+                    withdrawal = Math.min(withdrawal, baseMaxSpending);
+                }
+
                 const yearResults = [];
                 let ruined = false;
                 let ruinAge = null;
@@ -1614,6 +1813,7 @@
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+                    const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1632,8 +1832,9 @@
                         withdrawal *= (1 + adjustmentFactor); // Increase spending
                     }
 
-                    // Never go below inflation-adjusted minimum spending
+                    // Apply min/max spending constraints
                     withdrawal = Math.max(withdrawal, inflationAdjustedMinSpending);
+                    withdrawal = Math.min(withdrawal, inflationAdjustedMaxSpending);
 
                     const netWithdrawal = Math.max(0, withdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -1687,6 +1888,8 @@
                 const years = inputs.planningAge - inputs.retirementAge;
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
                 const baseMinSpending = inputs.minSpending || 0;
+                const baseMaxSpending = inputs.maxSpending || 0;
+                const baseStartingWithdrawal = inputs.startingWithdrawal || 0;
 
                 let portfolio = inputs.startingPortfolio;
                 const yearResults = [];
@@ -1697,6 +1900,8 @@
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+                    const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
+                    const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1708,7 +1913,12 @@
 
                     const lifeExp = this.lifeExpectancy(age);
                     const rmdWithdrawal = portfolio / lifeExp;
-                    const targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
+                    let targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
+                    if (inflationAdjustedStartingWithdrawal > 0) {
+                        targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+                    }
+                    // Apply max spending cap
+                    targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
                     portfolio -= netWithdrawal;
@@ -2395,11 +2605,13 @@
                     retirementAge: parseInt(document.getElementById('retirement-age').value),
                     planningAge: parseInt(document.getElementById('planning-age').value),
                     startingPortfolio: parseFormattedNumber(document.getElementById('starting-portfolio').value),
+                    startingWithdrawal: parseFormattedNumber(document.getElementById('starting-withdrawal').value),
                     expectedReturn: parseFloat(document.getElementById('expected-return').value.replace(/,/g, '')),
                     volatility: parseFloat(document.getElementById('volatility').value.replace(/,/g, '')),
                     inflationRate: parseFloat(document.getElementById('inflation-rate').value.replace(/,/g, '')),
                     monteCarloRuns: parseInt(parseFormattedNumber(document.getElementById('monte-carlo-runs').value)),
                     minSpending: parseFormattedNumber(document.getElementById('min-spending').value),
+                    maxSpending: parseFormattedNumber(document.getElementById('max-spending').value),
                     oneTimeExpense: parseFormattedNumber(document.getElementById('one-time-expense').value),
                     socialSecurity: parseFormattedNumber(document.getElementById('social-security').value),
                     ssStartAge: parseInt(document.getElementById('ss-start-age').value),
@@ -2496,6 +2708,12 @@
                 this.displayDetailedTables(results, inputs);
                 this.displayReport(results, inputs);
                 this.displayAssumptions(inputs);
+
+                // Trigger celebration for good outcomes
+                const bestSuccessRate = Math.max(...Object.values(results).map(r => r.successRate));
+                setTimeout(() => {
+                    CelebrationEffects.celebrateIfWarranted(bestSuccessRate, inputs.targetSuccessRate);
+                }, 500);
             },
 
             /**
@@ -2514,8 +2732,8 @@
                 html += '<div>';
                 html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Success Rates</h3>';
                 html += '<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">';
-                strategies.forEach(strategy => {
-                    html += `<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4">
+                strategies.forEach((strategy, index) => {
+                    html += `<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4 stagger-item hover-lift" style="animation-delay: ${index * 0.1}s">
                         <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">${Report.strategyDisplayName(strategy.name)}</h4>
                         ${SuccessRateGauge.render(strategy.successRate)}
                     </div>`;
@@ -2545,8 +2763,8 @@
                 html += '</thead>';
                 html += '<tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">';
 
-                strategies.forEach(s => {
-                    html += '<tr class="hover:bg-gray-50 dark:hover:bg-slate-800">';
+                strategies.forEach((s, index) => {
+                    html += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 stagger-item" style="animation-delay: ${0.3 + index * 0.08}s">`;
                     html += `<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">${Report.strategyDisplayName(s.name)}</td>`;
                     html += `<td class="px-4 py-3 text-sm">
                         <div class="flex items-center gap-2 mb-1">
@@ -2751,6 +2969,7 @@
                 html += `<div><span class="font-medium">Retirement Age:</span> ${inputs.retirementAge}</div>`;
                 html += `<div><span class="font-medium">Planning Horizon:</span> ${inputs.planningAge}</div>`;
                 html += `<div><span class="font-medium">Starting Portfolio:</span> ${Charts.formatCurrency(inputs.startingPortfolio)}</div>`;
+                html += `<div><span class="font-medium">Starting Withdrawal:</span> ${inputs.startingWithdrawal > 0 ? Charts.formatCurrency(inputs.startingWithdrawal) + '/year' : 'Use strategy default'}</div>`;
                 html += `<div><span class="font-medium">Years in Retirement:</span> ${inputs.planningAge - inputs.retirementAge}</div>`;
                 html += '</div>';
                 html += '</div>';
@@ -2771,6 +2990,7 @@
                 html += '<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Income & Constraints</h4>';
                 html += '<div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">';
                 html += `<div><span class="font-medium">Min Spending:</span> ${Charts.formatCurrency(inputs.minSpending)}/year</div>`;
+                html += `<div><span class="font-medium">Max Spending:</span> ${inputs.maxSpending > 0 ? Charts.formatCurrency(inputs.maxSpending) + '/year' : 'No cap'}</div>`;
                 html += `<div><span class="font-medium">One-Time Expense (Every 5 Years):</span> ${Charts.formatCurrency(inputs.oneTimeExpense || 0)}</div>`;
                 html += `<div><span class="font-medium">Social Security:</span> ${Charts.formatCurrency(inputs.socialSecurity)}/year</div>`;
                 html += `<div><span class="font-medium">SS Start Age:</span> ${inputs.ssStartAge}</div>`;
@@ -2832,15 +3052,28 @@
                         button.classList.add('active', 'border-primary-500', 'text-primary-600', 'dark:text-primary-400');
                         button.classList.remove('text-gray-600', 'dark:text-gray-400', 'border-transparent');
 
-                        // Update content visibility
+                        // Update content visibility with animation
                         tabContents.forEach(content => {
-                            content.classList.add('hidden');
-                            content.classList.remove('active');
                             if (content.id === `tab-${targetTab}`) {
+                                // Fade in the new content
                                 content.classList.remove('hidden');
                                 content.classList.add('active');
+                                content.style.opacity = '0';
+                                content.style.transform = 'translateY(10px)';
+                                requestAnimationFrame(() => {
+                                    content.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                                    content.style.opacity = '1';
+                                    content.style.transform = 'translateY(0)';
+                                });
+                            } else {
+                                content.classList.add('hidden');
+                                content.classList.remove('active');
                             }
                         });
+
+                        // Wiggle animation on the active tab button
+                        button.classList.add('animate-wiggle');
+                        setTimeout(() => button.classList.remove('animate-wiggle'), 500);
                     });
                 });
             },
@@ -2989,13 +3222,8 @@
                 // Announce dynamic content changes to screen readers
                 this.ariaLive = document.getElementById('aria-live');
 
-                // Check for reduced motion preference
-                this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-                // Listen for changes in motion preference
-                window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
-                    this.prefersReducedMotion = e.matches;
-                });
+                // Always enable animations (user preference)
+                this.prefersReducedMotion = false;
             },
 
             /**
@@ -3008,6 +3236,73 @@
                     setTimeout(() => {
                         this.ariaLive.textContent = '';
                     }, 1000);
+                }
+            }
+        };
+
+        // ============================================
+        // CELEBRATION EFFECTS
+        // Visual feedback for successful outcomes
+        // ============================================
+        const CelebrationEffects = {
+            /**
+             * Create confetti celebration for high success rates
+             */
+            triggerConfetti(count = 50) {
+                const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#22c55e', '#06b6d4'];
+
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti-piece';
+                        confetti.style.left = Math.random() * 100 + 'vw';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                        confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+                        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+                        if (Math.random() > 0.5) {
+                            confetti.style.borderRadius = '50%';
+                        }
+
+                        document.body.appendChild(confetti);
+
+                        // Remove after animation
+                        setTimeout(() => confetti.remove(), 4000);
+                    }, i * 30);
+                }
+            },
+
+            /**
+             * Trigger celebration based on success rate
+             */
+            celebrateIfWarranted(bestSuccessRate, targetRate) {
+                if (bestSuccessRate >= targetRate && bestSuccessRate >= 90) {
+                    this.triggerConfetti(60);
+                    this.addSparkles(12);
+                } else if (bestSuccessRate >= targetRate) {
+                    this.triggerConfetti(30);
+                    this.addSparkles(6);
+                }
+            },
+
+            /**
+             * Add sparkle effects around the screen
+             */
+            addSparkles(count) {
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const sparkle = document.createElement('div');
+                        sparkle.className = 'sparkle';
+                        sparkle.style.left = (10 + Math.random() * 80) + 'vw';
+                        sparkle.style.top = (10 + Math.random() * 80) + 'vh';
+                        sparkle.style.animationDelay = (Math.random() * 0.5) + 's';
+                        sparkle.style.zIndex = '9998';
+                        sparkle.style.position = 'fixed';
+                        document.body.appendChild(sparkle);
+
+                        setTimeout(() => sparkle.remove(), 2000);
+                    }, i * 100);
                 }
             }
         };
@@ -3432,9 +3727,11 @@
                 const textColor = darkMode ? '#e2e8f0' : '#1f2937';
                 const bgStroke = darkMode ? '#1e293b' : '#e5e7eb';
 
+                const pulseClass = successRate >= 90 ? 'ring-pulse' : '';
+
                 let html = `
                     <div class="gauge-container">
-                        <svg width="200" height="120" viewBox="0 0 200 120">
+                        <svg width="200" height="120" viewBox="0 0 200 120" class="${pulseClass}" style="color: ${color}">
                             <path class="gauge-background"
                                 d="M 20 100 A 80 80 0 1 1 180 100"
                                 stroke="${bgStroke}"
@@ -3447,8 +3744,10 @@
                                 stroke-width="12"
                                 fill="none"
                                 stroke-dasharray="${circumference}"
-                                stroke-dashoffset="${offset}"
-                                stroke-linecap="round">
+                                stroke-dashoffset="${circumference}"
+                                stroke-linecap="round"
+                                style="transition: stroke-dashoffset 1.5s ease-out; animation: gaugeIn 1.5s ease-out forwards;">
+                                <animate attributeName="stroke-dashoffset" from="${circumference}" to="${offset}" dur="1.5s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
                             </path>
                             <text x="100" y="90" text-anchor="middle" font-size="32" font-weight="bold" fill="${textColor}">
                                 ${successRate.toFixed(1)}%
@@ -3546,9 +3845,6 @@
                 const textColor = isDark ? '#e2e8f0' : '#1f2937';
                 const gridColor = isDark ? '#334155' : '#e2e8f0';
 
-                // Check for reduced motion preference
-                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
                 const options = {
                     series: [{
                         name: 'Simulations',
@@ -3559,15 +3855,15 @@
                         height: 300,
                         background: 'transparent',
                         animations: {
-                            enabled: !prefersReducedMotion,
-                            speed: 800,
+                            enabled: true,
+                            speed: 1000,
                             animateGradually: {
                                 enabled: true,
-                                delay: 50
+                                delay: 80
                             },
                             dynamicAnimation: {
                                 enabled: true,
-                                speed: 350
+                                speed: 500
                             }
                         },
                         toolbar: {

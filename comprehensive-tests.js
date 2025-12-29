@@ -940,9 +940,17 @@ describe('User Default Scenario ($1.5M, $150k spend, retire at 45)', () => {
     });
 
     test('Monte Carlo produces range of outcomes', () => {
+        // Use a more sustainable withdrawal scenario to test variance
+        // (The default inputs have 10% withdrawal rate which depletes most simulations to $0)
+        const sustainableInputs = {
+            ...inputs,
+            startingPortfolio: 3000000,  // Larger portfolio
+            minSpending: 100000,          // Lower spending (3.3% rate)
+            planningAge: 70               // Shorter horizon (25 years)
+        };
         const finalBalances = [];
         for (let i = 0; i < 100; i++) {
-            const result = Simulation.strategyConstantReal(inputs, false);
+            const result = Simulation.strategyConstantReal(sustainableInputs, false);
             finalBalances.push(result.finalBalance);
         }
         const min = Math.min(...finalBalances);
