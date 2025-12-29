@@ -1150,11 +1150,10 @@
                                     </label>
                                     <select id="risk-tolerance"
                                         class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                                        <option value="50">50% - Very Aggressive</option>
-                                        <option value="75">75% - Aggressive</option>
-                                        <option value="90" selected>90% - Moderate</option>
-                                        <option value="95">95% - Conservative</option>
-                                        <option value="100">100% - Very Conservative</option>
+                                        <option value="25">25% - Very Aggressive</option>
+                                        <option value="50">50% - Aggressive</option>
+                                        <option value="75">75% - Moderate</option>
+                                        <option value="95" selected>95% - Conservative</option>
                                     </select>
                                 </div>
                             </div>
@@ -2007,6 +2006,7 @@
                 // Calculate percentile paths for probability cone
                 const numYears = medianPath.length;
                 const percentilePaths = {
+                    p5: [],
                     p10: [],
                     p25: [],
                     p50: [],
@@ -2017,6 +2017,7 @@
 
                 for (let yearIdx = 0; yearIdx < numYears; yearIdx++) {
                     const portfolioValues = paths.map(p => p.years[yearIdx]?.portfolioEnd || 0).sort((a, b) => a - b);
+                    percentilePaths.p5.push(this.percentile(portfolioValues, 5));
                     percentilePaths.p10.push(this.percentile(portfolioValues, 10));
                     percentilePaths.p25.push(this.percentile(portfolioValues, 25));
                     percentilePaths.p50.push(this.percentile(portfolioValues, 50));
@@ -2908,13 +2909,16 @@
              */
             displayDetailedTables(results, inputs) {
                 const strategies = Object.values(results);
+                // Calculate poor percentile based on target success rate (e.g., 95% target = 5th percentile)
+                const poorPercentile = 100 - inputs.targetSuccessRate;
+                const goodPercentile = inputs.targetSuccessRate;
 
                 let html = '<div class="space-y-8">';
 
                 html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Year-by-Year Details</h3>';
                 html += '<p class="text-gray-800 dark:text-gray-200 mb-2">Detailed breakdown showing portfolio value and withdrawals for each year of retirement under each strategy.</p>';
                 html += '<p class="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">All dollar amounts are in today\'s dollars (inflation-adjusted to maintain purchasing power)</p>';
-                html += '<p class="text-xs text-gray-600 dark:text-gray-400 mb-6"><span class="text-red-600 dark:text-red-400 font-medium">10th %ile (Poor)</span> = worst 10% of outcomes · <span class="font-medium">Median</span> = typical outcome · <span class="text-green-600 dark:text-green-400 font-medium">90th %ile (Good)</span> = best 10% of outcomes</p>';
+                html += `<p class="text-xs text-gray-600 dark:text-gray-400 mb-6"><span class="text-red-600 dark:text-red-400 font-medium">${poorPercentile}th %ile (Poor)</span> = worst ${poorPercentile}% of outcomes · <span class="font-medium">Median</span> = typical outcome · <span class="text-green-600 dark:text-green-400 font-medium">${goodPercentile}th %ile (Good)</span> = best ${100 - goodPercentile}% of outcomes</p>`;
 
                 strategies.forEach(strategy => {
                     html += `<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">`;
@@ -2930,9 +2934,9 @@
                     html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Return %</th>';
                     html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Annual Withdrawal</th>';
                     html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Monthly Withdrawal</th>';
-                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-red-700 dark:text-red-400 uppercase">10th %ile (Poor)</th>';
+                    html += `<th class="px-3 py-2 text-right text-xs font-medium text-red-700 dark:text-red-400 uppercase">${poorPercentile}th %ile (Poor)</th>`;
                     html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Portfolio End (Median)</th>';
-                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-green-700 dark:text-green-400 uppercase">90th %ile (Good)</th>';
+                    html += `<th class="px-3 py-2 text-right text-xs font-medium text-green-700 dark:text-green-400 uppercase">${goodPercentile}th %ile (Good)</th>`;
                     html += '</tr>';
                     html += '</thead>';
                     html += '<tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">';
@@ -2941,6 +2945,12 @@
                     const years = strategy.medianPath;
                     const inflationMultiplier = 1 + inputs.inflationRate / 100;
 
+                    // Get the correct percentile paths based on target success rate
+                    const poorKey = 'p' + poorPercentile;
+                    const goodKey = 'p' + goodPercentile;
+                    const poorPath = strategy.percentilePaths[poorKey] || strategy.percentilePaths.p10;
+                    const goodPath = strategy.percentilePaths[goodKey] || strategy.percentilePaths.p90;
+
                     years.forEach((year, idx) => {
                         // Deflate nominal values back to today's purchasing power
                         const deflator = Math.pow(inflationMultiplier, idx);
@@ -2948,11 +2958,11 @@
                         const realWithdrawal = year.withdrawal / deflator;
                         const realMonthlyWithdrawal = realWithdrawal / 12;
                         const realPortfolioEnd = year.portfolioEnd / deflator;
-                        const realP10End = (strategy.percentilePaths.p10[idx] || 0) / deflator;
-                        const realP90End = (strategy.percentilePaths.p90[idx] || 0) / deflator;
+                        const realPoorEnd = (poorPath[idx] || 0) / deflator;
+                        const realGoodEnd = (goodPath[idx] || 0) / deflator;
 
                         // Highlight poor outcomes in red
-                        const p10Class = realP10End === 0 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-800 dark:text-gray-200';
+                        const poorClass = realPoorEnd === 0 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-800 dark:text-gray-200';
 
                         html += '<tr class="hover:bg-gray-50 dark:hover:bg-slate-800">';
                         html += `<td class="px-3 py-2 text-gray-900 dark:text-gray-100">${year.year + 1}</td>`;
@@ -2961,9 +2971,9 @@
                         html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${year.returnPct.toFixed(2)}%</td>`;
                         html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realWithdrawal)}</td>`;
                         html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realMonthlyWithdrawal)}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono ${p10Class}">${Charts.formatCurrency(realP10End)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono ${poorClass}">${Charts.formatCurrency(realPoorEnd)}</td>`;
                         html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200 font-semibold">${Charts.formatCurrency(realPortfolioEnd)}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-green-700 dark:text-green-400">${Charts.formatCurrency(realP90End)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-green-700 dark:text-green-400">${Charts.formatCurrency(realGoodEnd)}</td>`;
                         html += '</tr>';
                     });
 
