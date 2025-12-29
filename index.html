@@ -1187,11 +1187,6 @@
                         </button>
                     </div>
 
-                    <!-- Theme indicator (dark mode is default now) -->
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-[#98989d]" id="theme-label">Dark Mode</span>
-                        <div class="w-2 h-2 rounded-full bg-[#30d158] animate-pulse-soft"></div>
-                    </div>
                 </div>
             </div>
         </header>
@@ -3439,10 +3434,8 @@
              * Initialize theme toggle functionality
              */
             initThemeToggle() {
-                // Apple-style design is always dark mode
-                const html = document.documentElement;
-                html.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
+                // Always use dark mode
+                document.documentElement.classList.add('dark');
             },
 
             /**
