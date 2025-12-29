@@ -2389,6 +2389,11 @@
             generateReport(results, inputs) {
                 const strategies = Object.values(results);
 
+                // Calculate deflator for final values (end of retirement period)
+                const years = inputs.planningAge - inputs.retirementAge;
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const finalDeflator = Math.pow(inflationMultiplier, years - 1);
+
                 let html = '<div class="space-y-8 animate-fade-in">';
 
                 // US Retirement Portfolio Benchmarks
@@ -2457,7 +2462,7 @@
                 const bestIncome = strategies.reduce((max, s) => s.medianWithdrawals > max.medianWithdrawals ? s : max);
 
                 html += `<li>For <strong>highest success rate</strong> (${bestSuccess.successRate.toFixed(1)}%): <span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(bestSuccess.name)}</span></li>`;
-                html += `<li>For <strong>maximum legacy wealth</strong> (median ${Charts.formatCurrency(bestWealth.medianFinal)}): <span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(bestWealth.name)}</span></li>`;
+                html += `<li>For <strong>maximum legacy wealth</strong> (median ${Charts.formatCurrency(bestWealth.medianFinal / finalDeflator)}): <span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(bestWealth.name)}</span></li>`;
                 html += `<li>For <strong>maximum lifetime spending</strong> (${Charts.formatCurrency(bestIncome.medianWithdrawals)}): <span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(bestIncome.name)}</span></li>`;
                 html += '</ul>';
 
@@ -2472,7 +2477,7 @@
                 html += '<div class="space-y-6">';
 
                 strategies.forEach(strategy => {
-                    html += this.strategyNarrative(strategy);
+                    html += this.strategyNarrative(strategy, inputs);
                 });
 
                 html += '</div></div>';
@@ -2508,7 +2513,12 @@
                 return map[name] || name;
             },
 
-            strategyNarrative(strategy) {
+            strategyNarrative(strategy, inputs) {
+                // Calculate deflator for final values
+                const years = inputs.planningAge - inputs.retirementAge;
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const finalDeflator = Math.pow(inflationMultiplier, years - 1);
+
                 let html = '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
 
                 // Strategy name with info tooltip
@@ -2539,8 +2549,8 @@
 
                 html += '<div class="grid grid-cols-2 gap-2 text-xs text-gray-800 dark:text-gray-200 mb-2">';
                 html += `<div>Success Rate: <strong>${strategy.successRate.toFixed(1)}%</strong> ${this.successBadge(strategy.successRate)}</div>`;
-                html += `<div>Median Final: <strong>${Charts.formatCurrency(strategy.medianFinal)}</strong></div>`;
-                html += `<div>10th Percentile: <strong>${Charts.formatCurrency(strategy.p10Final)}</strong></div>`;
+                html += `<div>Median Final: <strong>${Charts.formatCurrency(strategy.medianFinal / finalDeflator)}</strong></div>`;
+                html += `<div>10th Percentile: <strong>${Charts.formatCurrency(strategy.p10Final / finalDeflator)}</strong></div>`;
                 html += `<div>Total Withdrawals: <strong>${Charts.formatCurrency(strategy.medianWithdrawals)}</strong></div>`;
                 html += '</div>';
 
@@ -2722,6 +2732,11 @@
             displaySummary(results, inputs) {
                 const strategies = Object.values(results);
 
+                // Calculate deflator for final values (end of retirement period)
+                const years = inputs.planningAge - inputs.retirementAge;
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const finalDeflator = Math.pow(inflationMultiplier, years - 1); // Deflate final year values
+
                 let html = '<div class="space-y-6 animate-fade-in">';
 
                 // Key Insights Panel
@@ -2775,10 +2790,10 @@
                             <div class="progress-bar-animated bg-gradient-to-r from-primary-500 to-primary-600 h-1.5 rounded-full" style="width: ${s.successRate}%"></div>
                         </div>
                     </td>`;
-                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.medianFinal)}</td>`;
-                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p75Final)}</td>`;
-                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p90Final)}</td>`;
-                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p95Final)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.medianFinal / finalDeflator)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p75Final / finalDeflator)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p90Final / finalDeflator)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p95Final / finalDeflator)}</td>`;
                     html += '</tr>';
                 });
 
@@ -2837,12 +2852,24 @@
 
                 // Wait for DOM update, then draw charts
                 setTimeout(() => {
+                    // Deflate nominal values to today's dollars for display
+                    const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                    const deflate = (values) => values.map((v, idx) => v / Math.pow(inflationMultiplier, idx));
+                    const deflatePercentilePaths = (paths) => ({
+                        p10: deflate(paths.p10),
+                        p25: deflate(paths.p25),
+                        p50: deflate(paths.p50),
+                        p75: deflate(paths.p75),
+                        p90: deflate(paths.p90),
+                        p95: deflate(paths.p95)
+                    });
+
                     const portfolioData = {
                         startAge: inputs.retirementAge,
                         series: strategies.map(s => ({
                             label: Report.strategyDisplayName(s.name),
-                            values: s.medianPath.map(y => y.portfolioEnd),
-                            percentilePaths: s.percentilePaths // Add percentile paths for probability cone
+                            values: deflate(s.medianPath.map(y => y.portfolioEnd)),
+                            percentilePaths: deflatePercentilePaths(s.percentilePaths)
                         }))
                     };
 
@@ -2850,7 +2877,7 @@
                         startAge: inputs.retirementAge,
                         series: strategies.map(s => ({
                             label: Report.strategyDisplayName(s.name),
-                            values: s.medianPath.map(y => y.withdrawal)
+                            values: deflate(s.medianPath.map(y => y.withdrawal))
                             // No percentile paths for withdrawals chart (less useful)
                         }))
                     };
@@ -2866,7 +2893,7 @@
                             histogramContainer.innerHTML = DistributionHistogram.render(results, strategy.name);
                             // Render ApexChart after container is in DOM
                             setTimeout(() => {
-                                DistributionHistogram.renderApexChart(results, strategy.name);
+                                DistributionHistogram.renderApexChart(results, strategy.name, inputs);
                             }, 50);
                         }
                     });
@@ -2907,25 +2934,32 @@
                     html += '</thead>';
                     html += '<tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">';
 
-                    // Show all years
+                    // Show all years - deflate nominal values to today's dollars
                     const years = strategy.medianPath;
+                    const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
                     years.forEach((year, idx) => {
-                        const monthlyWithdrawal = year.withdrawal / 12;
-                        const p75End = strategy.percentilePaths.p75[idx] || 0;
-                        const p90End = strategy.percentilePaths.p90[idx] || 0;
-                        const p95End = strategy.percentilePaths.p95[idx] || 0;
+                        // Deflate nominal values back to today's purchasing power
+                        const deflator = Math.pow(inflationMultiplier, idx);
+                        const realPortfolioStart = year.portfolioStart / deflator;
+                        const realWithdrawal = year.withdrawal / deflator;
+                        const realMonthlyWithdrawal = realWithdrawal / 12;
+                        const realPortfolioEnd = year.portfolioEnd / deflator;
+                        const realP75End = (strategy.percentilePaths.p75[idx] || 0) / deflator;
+                        const realP90End = (strategy.percentilePaths.p90[idx] || 0) / deflator;
+                        const realP95End = (strategy.percentilePaths.p95[idx] || 0) / deflator;
 
                         html += '<tr class="hover:bg-gray-50 dark:hover:bg-slate-800">';
                         html += `<td class="px-3 py-2 text-gray-900 dark:text-gray-100">${year.year + 1}</td>`;
                         html += `<td class="px-3 py-2 text-gray-900 dark:text-gray-100">${year.age}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(year.portfolioStart)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realPortfolioStart)}</td>`;
                         html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${year.returnPct.toFixed(2)}%</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(year.withdrawal)}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(monthlyWithdrawal)}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200 font-semibold">${Charts.formatCurrency(year.portfolioEnd)}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(p75End)}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(p90End)}</td>`;
-                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(p95End)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realWithdrawal)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realMonthlyWithdrawal)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200 font-semibold">${Charts.formatCurrency(realPortfolioEnd)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realP75End)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realP90End)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(realP95End)}</td>`;
                         html += '</tr>';
                     });
 
@@ -3122,13 +3156,25 @@
                             if (portfolioCanvas && withdrawalCanvas) {
                                 const strategies = Object.values(globalResults);
 
+                                // Deflate nominal values to today's dollars for display
+                                const inflationMultiplier = 1 + globalInputs.inflationRate / 100;
+                                const deflate = (values) => values.map((v, idx) => v / Math.pow(inflationMultiplier, idx));
+                                const deflatePercentilePaths = (paths) => ({
+                                    p10: deflate(paths.p10),
+                                    p25: deflate(paths.p25),
+                                    p50: deflate(paths.p50),
+                                    p75: deflate(paths.p75),
+                                    p90: deflate(paths.p90),
+                                    p95: deflate(paths.p95)
+                                });
+
                                 // Include percentilePaths for probability cone visualization
                                 const portfolioData = {
                                     startAge: globalInputs.retirementAge,
                                     series: strategies.map(s => ({
                                         label: Report.strategyDisplayName(s.name),
-                                        values: s.medianPath.map(y => y.portfolioEnd),
-                                        percentilePaths: s.percentilePaths
+                                        values: deflate(s.medianPath.map(y => y.portfolioEnd)),
+                                        percentilePaths: deflatePercentilePaths(s.percentilePaths)
                                     }))
                                 };
 
@@ -3136,7 +3182,7 @@
                                     startAge: globalInputs.retirementAge,
                                     series: strategies.map(s => ({
                                         label: Report.strategyDisplayName(s.name),
-                                        values: s.medianPath.map(y => y.withdrawal)
+                                        values: deflate(s.medianPath.map(y => y.withdrawal))
                                     }))
                                 };
 
@@ -3406,6 +3452,11 @@
                 const insights = [];
                 const recommendations = [];
 
+                // Calculate deflator for final values (end of retirement period)
+                const years = inputs.planningAge - inputs.retirementAge;
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const finalDeflator = Math.pow(inflationMultiplier, years - 1);
+
                 // ============================================
                 // CORE SUCCESS ANALYSIS
                 // ============================================
@@ -3620,11 +3671,11 @@
 
                     // Wealth preservation insight
                     const bestWealth = strategies.reduce((max, s) => s.medianFinal > max.medianFinal ? s : max);
-                    if (bestWealth.medianFinal > inputs.startingPortfolio * 0.5) {
+                    if (bestWealth.medianFinal / finalDeflator > inputs.startingPortfolio * 0.5) {
                         recommendations.push({
                             icon: '🏦',
                             title: 'Legacy Planning',
-                            text: `${Report.strategyDisplayName(bestWealth.name)} has a median final balance of ${Charts.formatCurrency(bestWealth.medianFinal)}. If leaving wealth to heirs is important, this strategy preserves the most capital.`,
+                            text: `${Report.strategyDisplayName(bestWealth.name)} has a median final balance of ${Charts.formatCurrency(bestWealth.medianFinal / finalDeflator)}. If leaving wealth to heirs is important, this strategy preserves the most capital.`,
                             impact: 'Consideration'
                         });
                     }
@@ -3784,7 +3835,7 @@
             },
 
             // Call this after the container is added to DOM
-            renderApexChart(results, strategyName) {
+            renderApexChart(results, strategyName, inputs) {
                 const strategy = results[strategyName];
                 if (!strategy || !strategy.allFinalValues) return;
 
@@ -3797,7 +3848,13 @@
                     this.charts[strategyName].destroy();
                 }
 
-                const values = strategy.allFinalValues;
+                // Calculate deflator for final values (end of retirement period)
+                const years = inputs.planningAge - inputs.retirementAge;
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const finalDeflator = Math.pow(inflationMultiplier, years - 1);
+
+                // Deflate all final values to today's dollars
+                const values = strategy.allFinalValues.map(v => v / finalDeflator);
                 const sorted = [...values].sort((a, b) => a - b);
 
                 // Calculate percentiles
