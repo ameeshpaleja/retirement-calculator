@@ -959,12 +959,15 @@
 
             /**
              * STRATEGY 1: Constant Real Withdrawal (4% Rule)
-             * Withdraws fixed % in year 1, then inflation-adjusted amount each year
+             * Withdraws the GREATER of: 4.5% of initial portfolio OR minSpending.
+             * Amount is then inflation-adjusted each year to maintain purchasing power.
              */
             strategyConstantReal(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
                 const initialRate = 4.5; // 4.5% initial withdrawal rate
-                const initialWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+                // Use the greater of 4.5% rule OR the specified minimum spending
+                const calculatedWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+                const initialWithdrawal = Math.max(calculatedWithdrawal, inputs.minSpending || 0);
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
 
                 let portfolio = inputs.startingPortfolio;
@@ -1031,12 +1034,14 @@
 
             /**
              * STRATEGY 2: Constant Percentage of Portfolio
-             * Withdraws same % of portfolio each year (self-adjusting)
+             * Withdraws 4% of current portfolio each year, but never less than minSpending.
+             * Self-adjusting to market conditions while maintaining minimum lifestyle.
              */
             strategyConstantPercent(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
                 const withdrawalRate = 4.0; // 4% each year
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const baseMinSpending = inputs.minSpending || 0;
 
                 let portfolio = inputs.startingPortfolio;
                 const yearResults = [];
@@ -1047,6 +1052,9 @@
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
 
+                    // Min spending grows with inflation to maintain purchasing power
+                    const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
                     const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
@@ -1054,7 +1062,9 @@
                     // Social Security with COLA adjustment
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
-                    const targetWithdrawal = portfolio * (withdrawalRate / 100);
+                    // Withdrawal is the greater of 4% of portfolio or minSpending
+                    const percentWithdrawal = portfolio * (withdrawalRate / 100);
+                    const targetWithdrawal = Math.max(percentWithdrawal, inflationAdjustedMinSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
                     portfolio -= netWithdrawal;
@@ -1097,11 +1107,13 @@
 
             /**
              * STRATEGY 3: Variable Percentage Withdrawal (VPW)
-             * Withdrawal % increases with age based on life expectancy
+             * Withdrawal % increases with age based on life expectancy.
+             * Never withdraws less than minSpending (inflation-adjusted).
              */
             strategyVPW(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const baseMinSpending = inputs.minSpending || 0;
 
                 let portfolio = inputs.startingPortfolio;
                 const yearResults = [];
@@ -1111,6 +1123,7 @@
                 for (let i = 0; i < years; i++) {
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
+                    const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1122,7 +1135,8 @@
 
                     const yearsRemaining = inputs.planningAge - age;
                     const vpwPct = this.vpwPercentage(yearsRemaining, 60);
-                    const targetWithdrawal = portfolio * (vpwPct / 100);
+                    const vpwWithdrawal = portfolio * (vpwPct / 100);
+                    const targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
                     portfolio -= netWithdrawal;
@@ -1165,7 +1179,9 @@
 
             /**
              * STRATEGY 4: Guardrails (Guyton-Klinger)
-             * Adjusts spending when withdrawal rate crosses thresholds
+             * Adjusts spending when withdrawal rate crosses thresholds.
+             * Initial withdrawal is the greater of 5% of portfolio or minSpending.
+             * Guardrails can adjust spending but never below minSpending floor.
              */
             strategyGuardrails(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
@@ -1174,9 +1190,12 @@
                 const lowerGuardrail = initialRate * 0.80; // -20%
                 const adjustmentFactor = 0.10; // 10% spending adjustment
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const baseMinSpending = inputs.minSpending || 0;
 
                 let portfolio = inputs.startingPortfolio;
-                let withdrawal = inputs.startingPortfolio * (initialRate / 100);
+                // Initial withdrawal is the greater of 5% or minSpending
+                const calculatedWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+                let withdrawal = Math.max(calculatedWithdrawal, baseMinSpending);
                 const yearResults = [];
                 let ruined = false;
                 let ruinAge = null;
@@ -1184,6 +1203,7 @@
                 for (let i = 0; i < years; i++) {
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
+                    const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1201,6 +1221,9 @@
                     } else if (currentRate < lowerGuardrail && portfolio > 0) {
                         withdrawal *= (1 + adjustmentFactor); // Increase spending
                     }
+
+                    // Never go below inflation-adjusted minimum spending
+                    withdrawal = Math.max(withdrawal, inflationAdjustedMinSpending);
 
                     const netWithdrawal = Math.max(0, withdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -1247,11 +1270,13 @@
 
             /**
              * STRATEGY 5: RMD / Life Expectancy
-             * Divides portfolio by remaining life expectancy each year
+             * Divides portfolio by remaining life expectancy each year.
+             * Never withdraws less than minSpending (inflation-adjusted).
              */
             strategyRMD(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const baseMinSpending = inputs.minSpending || 0;
 
                 let portfolio = inputs.startingPortfolio;
                 const yearResults = [];
@@ -1261,6 +1286,7 @@
                 for (let i = 0; i < years; i++) {
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
+                    const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1271,7 +1297,8 @@
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
 
                     const lifeExp = this.lifeExpectancy(age);
-                    const targetWithdrawal = portfolio / lifeExp;
+                    const rmdWithdrawal = portfolio / lifeExp;
+                    const targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
                     portfolio -= netWithdrawal;
@@ -2967,11 +2994,25 @@
                     svg += `<text x="${x}" y="${margin.top + chartHeight + 16}" text-anchor="middle" fill="${textColor}" font-size="10">${Charts.formatCurrency(value, true)}</text>`;
                 }
 
-                // Percentile markers (median only for cleaner look)
-                const medianValue = this.calculatePercentile(sorted, 50);
-                const medianX = margin.left + ((Math.min(medianValue, displayMax) - displayMin) / (displayMax - displayMin)) * chartWidth;
-                svg += `<line x1="${medianX}" y1="${margin.top}" x2="${medianX}" y2="${margin.top + chartHeight}" stroke="#22c55e" stroke-width="2" stroke-dasharray="4,3"/>`;
-                svg += `<text x="${medianX}" y="${margin.top - 3}" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">Median</text>`;
+                // Percentile markers: 25th, 50th (median), 75th, 95th
+                const percentileConfig = [
+                    { p: 25, color: '#f59e0b', label: 'P25' },   // amber
+                    { p: 50, color: '#22c55e', label: 'P50' },   // green (median)
+                    { p: 75, color: '#3b82f6', label: 'P75' },   // blue
+                    { p: 95, color: '#8b5cf6', label: 'P95' }    // purple
+                ];
+
+                percentileConfig.forEach(({ p, color, label }) => {
+                    const pValue = this.calculatePercentile(sorted, p);
+                    // Only draw if percentile is within display range
+                    if (pValue >= displayMin && pValue <= displayMax) {
+                        const pX = margin.left + ((pValue - displayMin) / (displayMax - displayMin)) * chartWidth;
+                        // Clamp X position to stay within chart area
+                        const clampedX = Math.max(margin.left + 2, Math.min(margin.left + chartWidth - 2, pX));
+                        svg += `<line x1="${clampedX}" y1="${margin.top}" x2="${clampedX}" y2="${margin.top + chartHeight}" stroke="${color}" stroke-width="2" stroke-dasharray="4,3"/>`;
+                        svg += `<text x="${clampedX}" y="${margin.top - 3}" text-anchor="middle" fill="${color}" font-size="9" font-weight="600">${label}</text>`;
+                    }
+                });
 
                 svg += '</svg>';
                 return svg;
@@ -3017,10 +3058,80 @@
                 }
             },
 
+            /**
+             * Runs a single simulation with fixed historical returns (not random).
+             * Used to test how a strategy would have performed in a specific period.
+             */
+            runHistoricalSimulation(inputs, strategyName, historicalReturns) {
+                const years = Math.min(inputs.planningAge - inputs.retirementAge, historicalReturns.length);
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                const baseMinSpending = inputs.minSpending || 0;
+
+                let portfolio = inputs.startingPortfolio;
+                let withdrawal;
+
+                // Initialize withdrawal based on strategy
+                if (strategyName === 'constant-real') {
+                    const initialRate = 4.5;
+                    const calculated = inputs.startingPortfolio * (initialRate / 100);
+                    withdrawal = Math.max(calculated, baseMinSpending);
+                } else if (strategyName === 'guardrails') {
+                    const initialRate = 5.0;
+                    const calculated = inputs.startingPortfolio * (initialRate / 100);
+                    withdrawal = Math.max(calculated, baseMinSpending);
+                }
+
+                for (let i = 0; i < years; i++) {
+                    const age = inputs.retirementAge + i;
+                    const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+
+                    // Social Security with COLA
+                    const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
+                    const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
+
+                    let targetWithdrawal;
+                    if (strategyName === 'constant-real') {
+                        targetWithdrawal = withdrawal;
+                    } else if (strategyName === 'constant-pct') {
+                        const pctWithdrawal = portfolio * 0.04;
+                        targetWithdrawal = Math.max(pctWithdrawal, inflationAdjustedMinSpending);
+                    } else if (strategyName === 'vpw') {
+                        const yearsRemaining = inputs.planningAge - age;
+                        const vpwPct = Simulation.vpwPercentage(yearsRemaining, 60);
+                        const vpwWithdrawal = portfolio * (vpwPct / 100);
+                        targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
+                    } else if (strategyName === 'guardrails') {
+                        targetWithdrawal = Math.max(withdrawal, inflationAdjustedMinSpending);
+                    } else if (strategyName === 'rmd') {
+                        const lifeExp = Simulation.lifeExpectancy(age);
+                        const rmdWithdrawal = portfolio / lifeExp;
+                        targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
+                    }
+
+                    const netWithdrawal = Math.max(0, targetWithdrawal - ss);
+                    portfolio -= netWithdrawal;
+
+                    if (portfolio <= 0) {
+                        return { survived: false, finalBalance: 0, yearsLasted: i };
+                    }
+
+                    // Apply historical return for this year
+                    const returnPct = historicalReturns[i] / 100;
+                    portfolio *= (1 + returnPct);
+
+                    // Inflate withdrawal for next year (constant-real and guardrails)
+                    if (strategyName === 'constant-real' || strategyName === 'guardrails') {
+                        withdrawal *= inflationMultiplier;
+                    }
+                }
+
+                return { survived: true, finalBalance: portfolio, yearsLasted: years };
+            },
+
             generateReport(results, inputs) {
                 let html = '<div class="space-y-6">';
                 html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Historical Backtesting</h3>';
-                html += '<p class="text-gray-800 dark:text-gray-200 mb-6">How would your strategies have performed if you retired during major historical market events?</p>';
+                html += '<p class="text-gray-800 dark:text-gray-200 mb-6">How would your strategies have performed if you retired during major historical market events? (Based on actual historical returns)</p>';
 
                 Object.entries(this.historicalScenarios).forEach(([key, scenario]) => {
                     html += `<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">`;
@@ -3030,13 +3141,19 @@
                     html += '<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">';
 
                     Object.values(results).forEach(strategyResult => {
-                        // Simplified: assume median path would have survived/failed based on average return
-                        const avgReturn = scenario.returns.reduce((a, b) => a + b, 0) / scenario.returns.length;
-                        const survived = avgReturn > -5; // Simple heuristic
+                        // Actually run the simulation with historical returns
+                        const historicalResult = this.runHistoricalSimulation(inputs, strategyResult.name, scenario.returns);
+                        const survived = historicalResult.survived;
+                        const finalBalance = historicalResult.finalBalance;
 
                         html += `<div class="p-3 rounded-lg ${survived ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'}">`;
                         html += `<div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">${Report.strategyDisplayName(strategyResult.name)}</div>`;
                         html += `<div class="text-lg font-bold ${survived ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}">${survived ? '✓ Survived' : '✗ Depleted'}</div>`;
+                        if (survived) {
+                            html += `<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Final: ${Charts.formatCurrency(finalBalance, true)}</div>`;
+                        } else {
+                            html += `<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Lasted ${historicalResult.yearsLasted} years</div>`;
+                        }
                         html += '</div>';
                     });
 
