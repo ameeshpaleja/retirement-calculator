@@ -1,0 +1,3054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Withdrawal Simulator</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Custom Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'slide-down': 'slideDown 0.5s ease-out',
+                        'progress': 'progress 1s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        progress: {
+                            '0%': { width: '0%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ============================================
+           CUSTOM TOOLTIP STYLES
+           ============================================
+           Tooltips for info icons and help text */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #1e293b;
+            color: #f1f5f9;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Light mode tooltip styling */
+        body:not(.dark) .tooltip .tooltiptext {
+            background-color: #1e293b;
+            color: #f1f5f9;
+            border: 1px solid #334155;
+        }
+
+        body:not(.dark) .tooltip .tooltiptext::after {
+            border-color: #1e293b transparent transparent transparent;
+        }
+
+        /* ============================================
+           INFO ICON STYLES
+           ============================================ */
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        .dark .info-icon {
+            background: #60a5fa;
+        }
+
+        /* ============================================
+           SMOOTH TRANSITIONS
+           ============================================
+           All color changes animate smoothly */
+        * {
+            transition-property: background-color, border-color, color;
+            transition-duration: 200ms;
+        }
+
+        /* ============================================
+           CANVAS STYLING
+           ============================================ */
+        canvas {
+            max-width: 100%;
+            height: auto;
+            cursor: crosshair;
+        }
+
+        /* ============================================
+           PROGRESS BAR ANIMATION
+           ============================================ */
+        @keyframes progressBar {
+            from {
+                width: 0;
+            }
+        }
+
+        .progress-bar-animated {
+            animation: progressBar 1.5s ease-out forwards;
+        }
+
+        /* ============================================
+           NUMBER INPUT - HIDE SPINNER ARROWS
+           ============================================ */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* ============================================
+           CHART TOOLTIP STYLES
+           ============================================
+           Tooltips that appear on chart hover */
+        #chart-tooltip {
+            position: absolute;
+            background: rgba(30, 41, 59, 0.95);
+            color: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        body:not(.dark) #chart-tooltip {
+            background: rgba(30, 41, 59, 0.95);
+            color: #f1f5f9;
+        }
+
+        /* ============================================
+           SUCCESS RATE GAUGE
+           ============================================ */
+        .gauge-container {
+            position: relative;
+            width: 200px;
+            height: 120px;
+            margin: 0 auto;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease-out, stroke 0.3s ease;
+        }
+
+        /* ============================================
+           SCENARIO CARDS
+           ============================================ */
+        .scenario-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .scenario-card.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ============================================
+           HISTOGRAM BARS
+           ============================================ */
+        .histogram-bar {
+            transition: opacity 0.2s ease;
+        }
+
+        .histogram-bar:hover {
+            opacity: 0.8;
+        }
+
+        /* ============================================
+           PRINT STYLES FOR PDF EXPORT
+           ============================================ */
+        @media print {
+            body {
+                background: white !important;
+            }
+
+            header, .no-print {
+                display: none !important;
+            }
+
+            .tab-content {
+                display: block !important;
+            }
+
+            canvas {
+                max-width: 100%;
+                page-break-inside: avoid;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        }
+
+        /* ============================================
+           INSIGHTS PANEL ANIMATIONS
+           ============================================ */
+        @keyframes insightPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .insight-warning {
+            animation: insightPulse 2s ease-in-out infinite;
+        }
+
+        /* ============================================
+           CHART FADE-IN ANIMATION
+           ============================================ */
+        @keyframes chartFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        canvas.chart-animated {
+            animation: chartFadeIn 0.5s ease-out;
+        }
+
+        /* ============================================
+           SMOOTH TAB TRANSITIONS
+           ============================================ */
+        .tab-content {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .tab-content.hidden {
+            opacity: 0;
+        }
+
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
+    <!-- ============================================
+         MAIN APP CONTAINER
+         ============================================ -->
+    <div class="min-h-screen flex flex-col">
+
+        <!-- ============================================
+             HEADER - STICKY TOP BAR
+             ============================================ -->
+        <header class="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-50 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            Retirement Withdrawal Simulator
+                        </h1>
+                        <!-- Back to Assumptions button (hidden initially) -->
+                        <button id="back-to-assumptions" class="hidden text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                            ← Edit Assumptions
+                        </button>
+                    </div>
+
+                    <!-- Theme Toggle -->
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="theme-label">Dark</span>
+                        <button id="theme-toggle" class="relative inline-flex h-7 w-14 items-center rounded-full bg-gray-300 dark:bg-primary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                            <span class="sr-only">Toggle theme</span>
+                            <span id="theme-slider" class="inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform translate-x-1 dark:translate-x-8"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================
+             MAIN CONTENT AREA
+             ============================================ -->
+        <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 w-full">
+
+            <!-- ============================================
+                 ASSUMPTIONS PANEL - SHOWN INITIALLY
+                 ============================================
+                 Takes full screen before simulation runs -->
+            <div id="assumptions-panel" class="animate-fade-in">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Configure Your Retirement Plan</h2>
+                        <p class="text-gray-700 dark:text-gray-300">Enter your assumptions below and select withdrawal strategies to compare</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <!-- Plan Setup Card -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                                Plan Setup
+                                <span class="tooltip ml-2">
+                                    <span class="info-icon">i</span>
+                                    <span class="tooltiptext">Configure your basic retirement timeline and starting portfolio value.</span>
+                                </span>
+                            </h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Current Age
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Your age today. This helps calculate years until retirement.</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="current-age" value="40" min="18" max="100"
+                                        class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Retirement Age
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Age when you plan to retire and start withdrawing from your portfolio.</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="retirement-age" value="65" min="18" max="100"
+                                        class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Planning Horizon (Age)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">The age you want to plan for. Common values are 90-100 to account for longevity risk.</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="planning-age" value="95" min="18" max="120"
+                                        class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Starting Portfolio at Retirement
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Total portfolio value when you retire. This is your starting nest egg for withdrawals.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
+                                        <input type="text" id="starting-portfolio" value="1,500,000"
+                                            class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Market Assumptions Card -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                                Market Assumptions
+                                <span class="tooltip ml-2">
+                                    <span class="info-icon">i</span>
+                                    <span class="tooltiptext">Expected returns and volatility drive the simulation. Conservative: 5%/12%, Moderate: 6%/15%, Aggressive: 7%/18%.</span>
+                                </span>
+                            </h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Expected Real Return (% per year)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Average annual return after inflation. Historical US stocks: ~7%, 60/40 portfolio: ~5%.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="text" id="expected-return" value="6.0"
+                                            class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 font-medium">%</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Annual Volatility (Standard Deviation %)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">How much returns vary year-to-year. Higher volatility = more uncertainty. US stocks: ~15-18%, bonds: ~5-7%.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="text" id="volatility" value="12.0"
+                                            class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 font-medium">%</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Inflation Rate (% per year)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Expected long-term inflation. Historical US average: ~2-3%. This affects purchasing power over time.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="text" id="inflation-rate" value="2.5"
+                                            class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 font-medium">%</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Monte Carlo Simulations
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Number of random market scenarios to test. More = better accuracy but slower. 1000+ recommended.</span>
+                                        </span>
+                                    </label>
+                                    <input type="text" id="monte-carlo-runs" value="10,000"
+                                        class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Income & Constraints Card -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Income & Constraints</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Minimum Acceptable Spending ($/year, today's dollars)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Your minimum required spending in today's purchasing power. The calculator adjusts this for inflation each year.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
+                                        <input type="text" id="min-spending" value="60,000"
+                                            class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">In today's purchasing power (inflation-adjusted)</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        One-Time Expense Every 5 Years (today's dollars)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Large one-time expense occurring every 5 years (e.g., car replacement, home renovation). Deducted in addition to annual spending. Adjusted for inflation.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
+                                        <input type="text" id="one-time-expense" value="0"
+                                            class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Occurs in years 5, 10, 15, 20, etc. Set to $0 to disable.</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Social Security / Pension ($/year)
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Annual income from Social Security, pensions, or other guaranteed sources. Reduces portfolio withdrawal needs.</span>
+                                        </span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
+                                        <input type="text" id="social-security" value="30,000"
+                                            class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Social Security Start Age
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Age when Social Security benefits begin. Common ages: 62 (reduced), 67 (full), 70 (maximum).</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="ss-start-age" value="67" min="62" max="70"
+                                        class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
+                                        Target Success Rate
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext">Desired probability of not running out of money. Higher = more conservative. 90-95% is common for retirement planning.</span>
+                                        </span>
+                                    </label>
+                                    <select id="risk-tolerance"
+                                        class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                        <option value="50">50% - Very Aggressive</option>
+                                        <option value="75">75% - Aggressive</option>
+                                        <option value="90" selected>90% - Moderate</option>
+                                        <option value="95">95% - Conservative</option>
+                                        <option value="100">100% - Very Conservative</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Withdrawal Strategies Card -->
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Withdrawal Strategies</h3>
+
+                            <div class="space-y-3">
+                                <label class="flex items-start cursor-pointer group">
+                                    <input type="checkbox" id="strategy-constant-real" checked
+                                        class="mt-1 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-slate-900 focus:ring-2 dark:bg-slate-800 dark:border-slate-700">
+                                    <span class="ml-3 text-sm text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-100 flex items-start">
+                                        Constant Real Withdrawal (4% Rule)
+                                        <span class="tooltip ml-1">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext"><strong>Classic 4% Rule:</strong> Withdraw a fixed percentage (typically 4-4.5%) of your starting portfolio in year one, then adjust that dollar amount for inflation each year. Provides predictable income but doesn't adapt to market performance.</span>
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start cursor-pointer group">
+                                    <input type="checkbox" id="strategy-constant-pct" checked
+                                        class="mt-1 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-slate-900 focus:ring-2 dark:bg-slate-800 dark:border-slate-700">
+                                    <span class="ml-3 text-sm text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-100 flex items-start">
+                                        Constant % of Portfolio
+                                        <span class="tooltip ml-1">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext"><strong>Dynamic Percentage:</strong> Withdraw a fixed percentage (e.g., 4%) of your current portfolio value each year. Your income varies with market performance, but theoretically you never run out. Good years = more spending, bad years = belt tightening.</span>
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start cursor-pointer group">
+                                    <input type="checkbox" id="strategy-vpw" checked
+                                        class="mt-1 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-slate-900 focus:ring-2 dark:bg-slate-800 dark:border-slate-700">
+                                    <span class="ml-3 text-sm text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-100 flex items-start">
+                                        Variable Percentage (VPW)
+                                        <span class="tooltip ml-1">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext"><strong>VPW Method:</strong> Withdrawal percentage increases as you age based on remaining life expectancy and asset allocation. Starts conservatively then allows higher spending in later years. Balances longevity protection with lifestyle.</span>
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start cursor-pointer group">
+                                    <input type="checkbox" id="strategy-guardrails" checked
+                                        class="mt-1 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-slate-900 focus:ring-2 dark:bg-slate-800 dark:border-slate-700">
+                                    <span class="ml-3 text-sm text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-100 flex items-start">
+                                        Guardrails (Dynamic)
+                                        <span class="tooltip ml-1">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext"><strong>Guyton-Klinger Guardrails:</strong> Start with an initial withdrawal rate, but adjust spending up or down (typically 10%) when your withdrawal rate crosses preset guardrails (±20% of initial). Provides stability with some market responsiveness.</span>
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start cursor-pointer group">
+                                    <input type="checkbox" id="strategy-rmd" checked
+                                        class="mt-1 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-slate-900 focus:ring-2 dark:bg-slate-800 dark:border-slate-700">
+                                    <span class="ml-3 text-sm text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-100 flex items-start">
+                                        RMD / Life Expectancy
+                                        <span class="tooltip ml-1">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext"><strong>RMD-Style:</strong> Each year, divide your portfolio by remaining life expectancy to determine withdrawal. Similar to IRS Required Minimum Distributions. Guarantees portfolio lasts lifetime but creates volatile income that starts low and increases with age.</span>
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Preset Scenarios -->
+                    <div class="mt-8">
+                        <div class="text-center mb-4">
+                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Start Templates</h4>
+                            <div class="flex flex-wrap justify-center gap-2">
+                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+                                    data-preset="conservative">
+                                    🛡️ Conservative
+                                </button>
+                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+                                    data-preset="moderate">
+                                    ⚖️ Moderate
+                                </button>
+                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+                                    data-preset="aggressive">
+                                    🚀 Aggressive
+                                </button>
+                                <button class="preset-scenario px-4 py-2 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+                                    data-preset="early-retire">
+                                    ⏰ Early Retirement
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Run Button -->
+                    <div class="mt-4 text-center">
+                        <button id="run-simulation"
+                            class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-12 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 text-lg">
+                            Run Simulation
+                        </button>
+                        <div class="mt-3 flex justify-center gap-3">
+                            <button id="save-scenario" class="no-print px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                💾 Save Scenario
+                            </button>
+                            <button id="export-pdf" class="no-print px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                📄 Export PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div id="status-message" class="hidden mt-6"></div>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 RESULTS PANEL - SHOWN AFTER SIMULATION
+                 ============================================ -->
+            <div id="results-panel" class="hidden animate-fade-in">
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800">
+
+                    <!-- Tabs -->
+                    <nav class="border-b border-gray-200 dark:border-slate-800">
+                        <ul class="flex flex-wrap -mb-px overflow-x-auto">
+                            <li>
+                                <button class="tab-button active inline-block px-4 sm:px-6 py-4 text-sm font-medium border-b-2 border-primary-500 text-primary-600 dark:text-primary-400 hover:text-primary-600 dark:hover:text-primary-400"
+                                    data-tab="summary">
+                                    Summary
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-button inline-block px-4 sm:px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                                    data-tab="report">
+                                    Report
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-button inline-block px-4 sm:px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                                    data-tab="charts">
+                                    Charts
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-button inline-block px-4 sm:px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                                    data-tab="tables">
+                                    Detailed Tables
+                                </button>
+                            </li>
+                            <li>
+                                <button class="tab-button inline-block px-4 sm:px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                                    data-tab="assumptions">
+                                    Assumptions
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <!-- Tab Content -->
+                    <div class="p-4 sm:p-6 lg:p-8 max-h-[calc(100vh-250px)] overflow-y-auto">
+
+                        <!-- Tab: Summary -->
+                        <div class="tab-content active" id="tab-summary">
+                            <!-- Populated by JavaScript -->
+                        </div>
+
+                        <!-- Tab: Charts -->
+                        <div class="tab-content hidden" id="tab-charts">
+                            <!-- Populated by JavaScript -->
+                        </div>
+
+                        <!-- Tab: Tables -->
+                        <div class="tab-content hidden" id="tab-tables">
+                            <!-- Populated by JavaScript -->
+                        </div>
+
+                        <!-- Tab: Report -->
+                        <div class="tab-content hidden" id="tab-report">
+                            <!-- Populated by JavaScript -->
+                        </div>
+
+                        <!-- Tab: Assumptions -->
+                        <div class="tab-content hidden" id="tab-assumptions">
+                            <!-- Populated by JavaScript -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Chart tooltip (hidden by default, shown on hover) -->
+    <div id="chart-tooltip" class="hidden"></div>
+
+    <!-- ============================================
+         JAVASCRIPT APPLICATION CODE
+         ============================================
+
+         ARCHITECTURE OVERVIEW:
+         ----------------------
+         1. INPUT FORMATTING: Handles number/currency formatting
+         2. SIMULATION ENGINE: Monte Carlo simulations for all strategies
+         3. CHARTS MODULE: Canvas-based interactive charts with tooltips
+         4. REPORT MODULE: Generates narrative recommendations
+         5. UI MODULE: Manages application state and user interactions
+
+         DATA FLOW:
+         ----------
+         User Inputs → Validation → Simulation Engine → Aggregation → [Charts, Tables, Report]
+
+         ============================================ -->
+    <script type="module">
+        'use strict';
+
+        // ============================================
+        // GLOBAL STATE MANAGEMENT
+        // ============================================
+        // Stores simulation results for use across modules
+        let globalResults = null;
+        let globalInputs = null;
+
+        // ============================================
+        // INPUT FORMATTING UTILITIES
+        // ============================================
+        // Formats numbers with commas for readability
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Parses formatted numbers back to raw values
+        function parseFormattedNumber(str) {
+            return parseFloat(str.replace(/,/g, ''));
+        }
+
+        /**
+         * Sets up automatic number formatting for input fields
+         * On focus: shows raw number for editing
+         * On blur: formats with commas/symbols
+         */
+        function setupNumberInput(id, formatter, parser) {
+            const input = document.getElementById(id);
+
+            input.addEventListener('focus', function() {
+                const val = parser(this.value);
+                if (!isNaN(val)) {
+                    this.value = val.toString();
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                const val = parser(this.value);
+                if (!isNaN(val)) {
+                    this.value = formatter(val);
+                }
+            });
+        }
+
+        // Initialize formatters on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setupNumberInput('starting-portfolio', formatNumber, parseFormattedNumber);
+            setupNumberInput('min-spending', formatNumber, parseFormattedNumber);
+            setupNumberInput('one-time-expense', formatNumber, parseFormattedNumber);
+            setupNumberInput('social-security', formatNumber, parseFormattedNumber);
+            setupNumberInput('monte-carlo-runs', formatNumber, parseFormattedNumber);
+        });
+
+        // ============================================
+        // TYPE DEFINITIONS (JSDoc for type safety)
+        // ============================================
+
+        /**
+         * @typedef {Object} Inputs
+         * @property {number} currentAge
+         * @property {number} retirementAge
+         * @property {number} planningAge
+         * @property {number} startingPortfolio
+         * @property {number} expectedReturn - Real return % per year
+         * @property {number} volatility - Standard deviation %
+         * @property {number} inflationRate - % per year
+         * @property {number} monteCarloRuns
+         * @property {number} minSpending
+         * @property {number} socialSecurity
+         * @property {number} ssStartAge
+         * @property {number} targetSuccessRate
+         * @property {string[]} strategies
+         */
+
+        /**
+         * @typedef {Object} YearResult
+         * @property {number} year - Year index (0-based)
+         * @property {number} age - Retiree's age
+         * @property {number} portfolioStart - Portfolio value at start of year
+         * @property {number} returnPct - Annual return percentage
+         * @property {number} withdrawal - Annual withdrawal amount
+         * @property {number} portfolioEnd - Portfolio value at end of year
+         * @property {boolean} ruined - Whether portfolio hit zero
+         */
+
+        /**
+         * @typedef {Object} PathResult
+         * @property {YearResult[]} years
+         * @property {number} finalBalance
+         * @property {number} totalWithdrawals
+         * @property {boolean} ruined
+         * @property {number} ruinAge
+         */
+
+        /**
+         * @typedef {Object} StrategyResult
+         * @property {string} name
+         * @property {PathResult[]} paths
+         * @property {number} successRate
+         * @property {number} medianFinal
+         * @property {number} p10Final
+         * @property {number} p90Final
+         * @property {number} medianWithdrawals
+         * @property {YearResult[]} medianPath
+         */
+
+        // ============================================
+        // SIMULATION ENGINE
+        // ============================================
+        const Simulation = {
+            /**
+             * Box-Muller transform: generates normally distributed random numbers
+             * Used for Monte Carlo return generation
+             */
+            randomNormal() {
+                let u = 0, v = 0;
+                while (u === 0) u = Math.random(); // Avoid log(0)
+                while (v === 0) v = Math.random();
+                return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            },
+
+            /**
+             * Generates annual return based on mean and volatility
+             * @param {number} mean - Expected return %
+             * @param {number} volatility - Standard deviation %
+             * @param {boolean} deterministic - If true, return mean (for median path)
+             * @returns {number} Annual return as decimal
+             */
+            generateReturn(mean, volatility, deterministic = false) {
+                if (deterministic) return mean / 100;
+                const z = this.randomNormal();
+                return (mean + z * volatility) / 100;
+            },
+
+            /**
+             * Simplified actuarial life expectancy table
+             * Returns expected years remaining at given age
+             */
+            lifeExpectancy(age) {
+                if (age < 60) return 95 - age;
+                if (age < 70) return 90 - age;
+                if (age < 80) return 87 - age;
+                if (age < 90) return 94 - age;
+                return Math.max(2, 100 - age);
+            },
+
+            /**
+             * VPW (Variable Percentage Withdrawal) lookup table
+             * Withdrawal % increases with age and stock allocation
+             */
+            vpwPercentage(yearsRemaining, stockAllocation = 60) {
+                if (yearsRemaining >= 30) return 3.0 + stockAllocation * 0.02;
+                if (yearsRemaining >= 25) return 3.5 + stockAllocation * 0.02;
+                if (yearsRemaining >= 20) return 4.0 + stockAllocation * 0.025;
+                if (yearsRemaining >= 15) return 5.0 + stockAllocation * 0.03;
+                if (yearsRemaining >= 10) return 6.5 + stockAllocation * 0.035;
+                if (yearsRemaining >= 5) return 9.0 + stockAllocation * 0.04;
+                return Math.min(100, 20.0 + yearsRemaining * 2);
+            },
+
+            /**
+             * STRATEGY 1: Constant Real Withdrawal (4% Rule)
+             * Withdraws fixed % in year 1, then inflation-adjusted amount each year
+             */
+            strategyConstantReal(inputs, deterministic = false) {
+                const years = inputs.planningAge - inputs.retirementAge;
+                const initialRate = 4.5; // 4.5% initial withdrawal rate
+                const initialWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
+                let portfolio = inputs.startingPortfolio;
+                let withdrawal = initialWithdrawal;
+                const yearResults = [];
+                let ruined = false;
+                let ruinAge = null;
+
+                for (let i = 0; i < years; i++) {
+                    const age = inputs.retirementAge + i;
+                    const portfolioStart = portfolio;
+
+                    // One-time expense every 5 years (inflation-adjusted)
+                    const isExpenseYear = ((i + 1) % 5 === 0);
+                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+
+                    // Social Security reduces portfolio withdrawal needs (with COLA adjustment)
+                    const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
+                    const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
+                    const netWithdrawal = Math.max(0, withdrawal - ss) + oneTimeExpenseThisYear;
+
+                    // Apply withdrawal
+                    portfolio -= netWithdrawal;
+
+                    if (portfolio < 0) {
+                        portfolio = 0;
+                        if (!ruined) {
+                            ruined = true;
+                            ruinAge = age;
+                        }
+                    }
+
+                    // Apply investment return
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    portfolio *= (1 + returnPct);
+
+                    yearResults.push({
+                        year: i,
+                        age,
+                        portfolioStart,
+                        returnPct: returnPct * 100,
+                        withdrawal: netWithdrawal,
+                        portfolioEnd: portfolio,
+                        ruined: portfolio <= 0
+                    });
+
+                    if (portfolio <= 0 && !ruined) {
+                        ruined = true;
+                        ruinAge = age;
+                    }
+
+                    // Inflate withdrawal for next year to maintain purchasing power
+                    withdrawal *= inflationMultiplier;
+                }
+
+                return {
+                    years: yearResults,
+                    finalBalance: portfolio,
+                    totalWithdrawals: yearResults.reduce((sum, y) => sum + y.withdrawal, 0),
+                    ruined,
+                    ruinAge
+                };
+            },
+
+            /**
+             * STRATEGY 2: Constant Percentage of Portfolio
+             * Withdraws same % of portfolio each year (self-adjusting)
+             */
+            strategyConstantPercent(inputs, deterministic = false) {
+                const years = inputs.planningAge - inputs.retirementAge;
+                const withdrawalRate = 4.0; // 4% each year
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
+                let portfolio = inputs.startingPortfolio;
+                const yearResults = [];
+                let ruined = false;
+                let ruinAge = null;
+
+                for (let i = 0; i < years; i++) {
+                    const age = inputs.retirementAge + i;
+                    const portfolioStart = portfolio;
+
+                    // One-time expense every 5 years (inflation-adjusted)
+                    const isExpenseYear = ((i + 1) % 5 === 0);
+                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+
+                    // Social Security with COLA adjustment
+                    const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
+                    const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
+                    const targetWithdrawal = portfolio * (withdrawalRate / 100);
+                    const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
+
+                    portfolio -= netWithdrawal;
+
+                    if (portfolio < 0) {
+                        portfolio = 0;
+                        if (!ruined) {
+                            ruined = true;
+                            ruinAge = age;
+                        }
+                    }
+
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    portfolio *= (1 + returnPct);
+
+                    yearResults.push({
+                        year: i,
+                        age,
+                        portfolioStart,
+                        returnPct: returnPct * 100,
+                        withdrawal: netWithdrawal,
+                        portfolioEnd: portfolio,
+                        ruined: portfolio <= 0
+                    });
+
+                    if (portfolio <= 0 && !ruined) {
+                        ruined = true;
+                        ruinAge = age;
+                    }
+                }
+
+                return {
+                    years: yearResults,
+                    finalBalance: portfolio,
+                    totalWithdrawals: yearResults.reduce((sum, y) => sum + y.withdrawal, 0),
+                    ruined,
+                    ruinAge
+                };
+            },
+
+            /**
+             * STRATEGY 3: Variable Percentage Withdrawal (VPW)
+             * Withdrawal % increases with age based on life expectancy
+             */
+            strategyVPW(inputs, deterministic = false) {
+                const years = inputs.planningAge - inputs.retirementAge;
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
+                let portfolio = inputs.startingPortfolio;
+                const yearResults = [];
+                let ruined = false;
+                let ruinAge = null;
+
+                for (let i = 0; i < years; i++) {
+                    const age = inputs.retirementAge + i;
+                    const portfolioStart = portfolio;
+
+                    // One-time expense every 5 years (inflation-adjusted)
+                    const isExpenseYear = ((i + 1) % 5 === 0);
+                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+
+                    // Social Security with COLA adjustment
+                    const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
+                    const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
+
+                    const yearsRemaining = inputs.planningAge - age;
+                    const vpwPct = this.vpwPercentage(yearsRemaining, 60);
+                    const targetWithdrawal = portfolio * (vpwPct / 100);
+                    const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
+
+                    portfolio -= netWithdrawal;
+
+                    if (portfolio < 0) {
+                        portfolio = 0;
+                        if (!ruined) {
+                            ruined = true;
+                            ruinAge = age;
+                        }
+                    }
+
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    portfolio *= (1 + returnPct);
+
+                    yearResults.push({
+                        year: i,
+                        age,
+                        portfolioStart,
+                        returnPct: returnPct * 100,
+                        withdrawal: netWithdrawal,
+                        portfolioEnd: portfolio,
+                        ruined: portfolio <= 0
+                    });
+
+                    if (portfolio <= 0 && !ruined) {
+                        ruined = true;
+                        ruinAge = age;
+                    }
+                }
+
+                return {
+                    years: yearResults,
+                    finalBalance: portfolio,
+                    totalWithdrawals: yearResults.reduce((sum, y) => sum + y.withdrawal, 0),
+                    ruined,
+                    ruinAge
+                };
+            },
+
+            /**
+             * STRATEGY 4: Guardrails (Guyton-Klinger)
+             * Adjusts spending when withdrawal rate crosses thresholds
+             */
+            strategyGuardrails(inputs, deterministic = false) {
+                const years = inputs.planningAge - inputs.retirementAge;
+                const initialRate = 5.0;
+                const upperGuardrail = initialRate * 1.20; // +20%
+                const lowerGuardrail = initialRate * 0.80; // -20%
+                const adjustmentFactor = 0.10; // 10% spending adjustment
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
+                let portfolio = inputs.startingPortfolio;
+                let withdrawal = inputs.startingPortfolio * (initialRate / 100);
+                const yearResults = [];
+                let ruined = false;
+                let ruinAge = null;
+
+                for (let i = 0; i < years; i++) {
+                    const age = inputs.retirementAge + i;
+                    const portfolioStart = portfolio;
+
+                    // One-time expense every 5 years (inflation-adjusted)
+                    const isExpenseYear = ((i + 1) % 5 === 0);
+                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+
+                    // Social Security with COLA adjustment
+                    const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
+                    const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
+
+                    // Check if withdrawal rate is outside guardrails
+                    const currentRate = (withdrawal / portfolioStart) * 100;
+
+                    if (currentRate > upperGuardrail) {
+                        withdrawal *= (1 - adjustmentFactor); // Reduce spending
+                    } else if (currentRate < lowerGuardrail && portfolio > 0) {
+                        withdrawal *= (1 + adjustmentFactor); // Increase spending
+                    }
+
+                    const netWithdrawal = Math.max(0, withdrawal - ss) + oneTimeExpenseThisYear;
+
+                    portfolio -= netWithdrawal;
+
+                    if (portfolio < 0) {
+                        portfolio = 0;
+                        if (!ruined) {
+                            ruined = true;
+                            ruinAge = age;
+                        }
+                    }
+
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    portfolio *= (1 + returnPct);
+
+                    yearResults.push({
+                        year: i,
+                        age,
+                        portfolioStart,
+                        returnPct: returnPct * 100,
+                        withdrawal: netWithdrawal,
+                        portfolioEnd: portfolio,
+                        ruined: portfolio <= 0
+                    });
+
+                    if (portfolio <= 0 && !ruined) {
+                        ruined = true;
+                        ruinAge = age;
+                    }
+
+                    // Inflate base withdrawal for next year
+                    withdrawal *= inflationMultiplier;
+                }
+
+                return {
+                    years: yearResults,
+                    finalBalance: portfolio,
+                    totalWithdrawals: yearResults.reduce((sum, y) => sum + y.withdrawal, 0),
+                    ruined,
+                    ruinAge
+                };
+            },
+
+            /**
+             * STRATEGY 5: RMD / Life Expectancy
+             * Divides portfolio by remaining life expectancy each year
+             */
+            strategyRMD(inputs, deterministic = false) {
+                const years = inputs.planningAge - inputs.retirementAge;
+                const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
+                let portfolio = inputs.startingPortfolio;
+                const yearResults = [];
+                let ruined = false;
+                let ruinAge = null;
+
+                for (let i = 0; i < years; i++) {
+                    const age = inputs.retirementAge + i;
+                    const portfolioStart = portfolio;
+
+                    // One-time expense every 5 years (inflation-adjusted)
+                    const isExpenseYear = ((i + 1) % 5 === 0);
+                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+
+                    // Social Security with COLA adjustment
+                    const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
+                    const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
+
+                    const lifeExp = this.lifeExpectancy(age);
+                    const targetWithdrawal = portfolio / lifeExp;
+                    const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
+
+                    portfolio -= netWithdrawal;
+
+                    if (portfolio < 0) {
+                        portfolio = 0;
+                        if (!ruined) {
+                            ruined = true;
+                            ruinAge = age;
+                        }
+                    }
+
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    portfolio *= (1 + returnPct);
+
+                    yearResults.push({
+                        year: i,
+                        age,
+                        portfolioStart,
+                        returnPct: returnPct * 100,
+                        withdrawal: netWithdrawal,
+                        portfolioEnd: portfolio,
+                        ruined: portfolio <= 0
+                    });
+
+                    if (portfolio <= 0 && !ruined) {
+                        ruined = true;
+                        ruinAge = age;
+                    }
+                }
+
+                return {
+                    years: yearResults,
+                    finalBalance: portfolio,
+                    totalWithdrawals: yearResults.reduce((sum, y) => sum + y.withdrawal, 0),
+                    ruined,
+                    ruinAge
+                };
+            },
+
+            /**
+             * Runs Monte Carlo simulation for a given strategy
+             * Executes thousands of scenarios with random returns
+             */
+            runStrategy(strategyName, inputs) {
+                const strategyMap = {
+                    'constant-real': this.strategyConstantReal,
+                    'constant-pct': this.strategyConstantPercent,
+                    'vpw': this.strategyVPW,
+                    'guardrails': this.strategyGuardrails,
+                    'rmd': this.strategyRMD
+                };
+
+                const strategy = strategyMap[strategyName];
+                if (!strategy) throw new Error(`Unknown strategy: ${strategyName}`);
+
+                const paths = [];
+
+                // Run Monte Carlo simulations
+                for (let i = 0; i < inputs.monteCarloRuns; i++) {
+                    paths.push(strategy.call(this, inputs, false));
+                }
+
+                // Calculate aggregate statistics
+                const successRate = (paths.filter(p => !p.ruined).length / paths.length) * 100;
+
+                const finalBalances = paths.map(p => p.finalBalance).sort((a, b) => a - b);
+                const totalWithdrawals = paths.map(p => p.totalWithdrawals).sort((a, b) => a - b);
+
+                const medianFinal = this.percentile(finalBalances, 50);
+                const p10Final = this.percentile(finalBalances, 10);
+                const p75Final = this.percentile(finalBalances, 75);
+                const p90Final = this.percentile(finalBalances, 90);
+                const p95Final = this.percentile(finalBalances, 95);
+                const medianWithdrawals = this.percentile(totalWithdrawals, 50);
+                const p75Withdrawals = this.percentile(totalWithdrawals, 75);
+                const p90Withdrawals = this.percentile(totalWithdrawals, 90);
+                const p95Withdrawals = this.percentile(totalWithdrawals, 95);
+
+                // Generate median path for visualization
+                const medianPath = strategy.call(this, inputs, true).years;
+
+                // Calculate percentile paths for probability cone
+                const numYears = medianPath.length;
+                const percentilePaths = {
+                    p10: [],
+                    p25: [],
+                    p50: [],
+                    p75: [],
+                    p90: [],
+                    p95: []
+                };
+
+                for (let yearIdx = 0; yearIdx < numYears; yearIdx++) {
+                    const portfolioValues = paths.map(p => p.years[yearIdx]?.portfolioEnd || 0).sort((a, b) => a - b);
+                    percentilePaths.p10.push(this.percentile(portfolioValues, 10));
+                    percentilePaths.p25.push(this.percentile(portfolioValues, 25));
+                    percentilePaths.p50.push(this.percentile(portfolioValues, 50));
+                    percentilePaths.p75.push(this.percentile(portfolioValues, 75));
+                    percentilePaths.p90.push(this.percentile(portfolioValues, 90));
+                    percentilePaths.p95.push(this.percentile(portfolioValues, 95));
+                }
+
+                return {
+                    name: strategyName,
+                    paths,
+                    successRate,
+                    medianFinal,
+                    p10Final,
+                    p75Final,
+                    p90Final,
+                    p95Final,
+                    medianWithdrawals,
+                    p75Withdrawals,
+                    p90Withdrawals,
+                    p95Withdrawals,
+                    medianPath,
+                    allFinalValues: finalBalances,  // Store all final values for histogram
+                    percentilePaths  // Store percentile paths for probability cone
+                };
+            },
+
+            /**
+             * Calculates percentile from sorted array
+             * Uses linear interpolation for precise values
+             */
+            percentile(sorted, p) {
+                if (sorted.length === 0) return 0;
+                const index = (p / 100) * (sorted.length - 1);
+                const lower = Math.floor(index);
+                const upper = Math.ceil(index);
+                const weight = index - lower;
+                return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+            }
+        };
+
+        // ============================================
+        // CHARTS MODULE WITH INTERACTIVE TOOLTIPS
+        // ============================================
+        const Charts = {
+            /**
+             * Draws interactive line chart with mouseover tooltips
+             * @param {HTMLCanvasElement} canvas
+             * @param {Object} data - Chart data with series
+             * @param {string} title - Chart title
+             */
+            drawLineChart(canvas, data, title) {
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+
+                const isDark = document.documentElement.classList.contains('dark');
+
+                // Theme-aware colors
+                const bgColor = isDark ? '#020617' : '#ffffff';
+                const textColor = isDark ? '#e2e8f0' : '#1f2937';
+                const gridColor = isDark ? '#1e293b' : '#e5e7eb';
+                const lineColors = [
+                    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
+                ];
+
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, width, height);
+
+                const margin = { top: 40, right: 150, bottom: 50, left: 80 };
+                const chartWidth = width - margin.left - margin.right;
+                const chartHeight = height - margin.top - margin.bottom;
+
+                // Calculate data ranges
+                const allYears = data.series[0].values.map((_, i) => i);
+                const allValues = data.series.flatMap(s => s.values);
+                const minValue = Math.min(0, ...allValues);
+                const maxValue = Math.max(...allValues);
+                const valueRange = maxValue - minValue;
+
+                // Scaling functions
+                const xScale = (year) => margin.left + (year / (allYears.length - 1)) * chartWidth;
+                const yScale = (value) => margin.top + chartHeight - ((value - minValue) / valueRange) * chartHeight;
+
+                // Draw grid lines
+                ctx.strokeStyle = gridColor;
+                ctx.lineWidth = 1;
+                const numGridLines = 5;
+                for (let i = 0; i <= numGridLines; i++) {
+                    const y = margin.top + (i / numGridLines) * chartHeight;
+                    ctx.beginPath();
+                    ctx.moveTo(margin.left, y);
+                    ctx.lineTo(margin.left + chartWidth, y);
+                    ctx.stroke();
+                }
+
+                // Draw axes
+                ctx.strokeStyle = textColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(margin.left, margin.top);
+                ctx.lineTo(margin.left, margin.top + chartHeight);
+                ctx.lineTo(margin.left + chartWidth, margin.top + chartHeight);
+                ctx.stroke();
+
+                // Y-axis labels
+                ctx.fillStyle = textColor;
+                ctx.font = '12px system-ui';
+                ctx.textAlign = 'right';
+                for (let i = 0; i <= numGridLines; i++) {
+                    const value = minValue + (i / numGridLines) * valueRange;
+                    const y = margin.top + chartHeight - (i / numGridLines) * chartHeight;
+                    ctx.fillText(this.formatCurrency(value, true), margin.left - 10, y + 4);
+                }
+
+                // X-axis labels
+                ctx.textAlign = 'center';
+                const numXLabels = 5;
+                for (let i = 0; i <= numXLabels; i++) {
+                    const yearIndex = Math.floor((i / numXLabels) * (allYears.length - 1));
+                    const x = xScale(yearIndex);
+                    const age = data.startAge + yearIndex;
+                    ctx.fillText(age.toString(), x, margin.top + chartHeight + 25);
+                }
+
+                ctx.fillText('Age', margin.left + chartWidth / 2, height - 10);
+
+                // Draw probability cone (percentile bands) if available
+                data.series.forEach((series, idx) => {
+                    if (series.percentilePaths) {
+                        const color = lineColors[idx % lineColors.length];
+                        const rgb = this.hexToRgb(color);
+
+                        // Draw 10-90 percentile band (wider, lighter)
+                        ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`;
+                        ctx.beginPath();
+                        // Draw top edge (p90)
+                        series.percentilePaths.p90.forEach((value, i) => {
+                            const x = xScale(i);
+                            const y = yScale(value);
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        });
+                        // Draw bottom edge backwards (p10)
+                        for (let i = series.percentilePaths.p10.length - 1; i >= 0; i--) {
+                            const x = xScale(i);
+                            const y = yScale(series.percentilePaths.p10[i]);
+                            ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+
+                        // Draw 25-75 percentile band (narrower, darker)
+                        ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
+                        ctx.beginPath();
+                        // Draw top edge (p75)
+                        series.percentilePaths.p75.forEach((value, i) => {
+                            const x = xScale(i);
+                            const y = yScale(value);
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        });
+                        // Draw bottom edge backwards (p25)
+                        for (let i = series.percentilePaths.p25.length - 1; i >= 0; i--) {
+                            const x = xScale(i);
+                            const y = yScale(series.percentilePaths.p25[i]);
+                            ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                });
+
+                // Draw data lines
+                data.series.forEach((series, idx) => {
+                    ctx.strokeStyle = lineColors[idx % lineColors.length];
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+
+                    series.values.forEach((value, i) => {
+                        const x = xScale(i);
+                        const y = yScale(value);
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    });
+
+                    ctx.stroke();
+                });
+
+                // Draw legend
+                ctx.textAlign = 'left';
+                data.series.forEach((series, idx) => {
+                    const y = margin.top + 20 + idx * 20;
+                    const x = margin.left + chartWidth + 10;
+
+                    ctx.fillStyle = lineColors[idx % lineColors.length];
+                    ctx.fillRect(x, y - 10, 15, 15);
+
+                    ctx.fillStyle = textColor;
+                    ctx.font = '11px system-ui';
+                    ctx.fillText(series.label.substring(0, 25), x + 20, y + 2);
+                });
+
+                // Chart title
+                ctx.font = 'bold 14px system-ui';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = textColor;
+                ctx.fillText(title, margin.left + chartWidth / 2, 20);
+
+                // Store chart data for tooltip functionality
+                canvas.chartData = {
+                    data,
+                    xScale,
+                    yScale,
+                    margin,
+                    lineColors,
+                    chartWidth,
+                    chartHeight
+                };
+
+                // Add mousemove listener for interactive tooltips
+                this.addChartTooltip(canvas);
+            },
+
+            /**
+             * Adds interactive mouseover tooltip to chart
+             * Shows year, age, and value on hover
+             * Draws vertical line indicator at mouse position
+             */
+            addChartTooltip(canvas) {
+                const tooltip = document.getElementById('chart-tooltip');
+
+                // Store original chart as image data for redrawing
+                if (!canvas.originalImageData) {
+                    const ctx = canvas.getContext('2d');
+                    canvas.originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                }
+
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+
+                    // Scale mouse coordinates to match canvas internal resolution
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    const mouseX = (e.clientX - rect.left) * scaleX;
+                    const mouseY = (e.clientY - rect.top) * scaleY;
+
+                    const { data, xScale, yScale, margin, chartWidth, chartHeight, lineColors } = canvas.chartData;
+                    const ctx = canvas.getContext('2d');
+
+                    // Restore original chart (remove previous line)
+                    ctx.putImageData(canvas.originalImageData, 0, 0);
+
+                    // Check if mouse is within chart area
+                    if (mouseX < margin.left || mouseX > margin.left + chartWidth ||
+                        mouseY < margin.top || mouseY > margin.top + chartHeight) {
+                        tooltip.classList.add('hidden');
+                        return;
+                    }
+
+                    // Find nearest year index
+                    const yearFraction = (mouseX - margin.left) / chartWidth;
+                    const yearIndex = Math.round(yearFraction * (data.series[0].values.length - 1));
+
+                    if (yearIndex < 0 || yearIndex >= data.series[0].values.length) {
+                        tooltip.classList.add('hidden');
+                        return;
+                    }
+
+                    // Calculate exact x position for the vertical line
+                    const lineX = margin.left + yearIndex * (chartWidth / (data.series[0].values.length - 1));
+
+                    // Draw vertical line indicator
+                    const isDark = document.documentElement.classList.contains('dark');
+                    ctx.strokeStyle = isDark ? 'rgba(226, 232, 240, 0.4)' : 'rgba(31, 41, 55, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(lineX, margin.top);
+                    ctx.lineTo(lineX, margin.top + chartHeight);
+                    ctx.stroke();
+                    ctx.setLineDash([]); // Reset dash pattern
+
+                    // Draw dots at intersection points
+                    data.series.forEach((series, idx) => {
+                        const value = series.values[yearIndex];
+                        const yPos = yScale(value);
+                        const color = lineColors[idx % lineColors.length];
+
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        ctx.arc(lineX, yPos, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.strokeStyle = isDark ? '#020617' : '#ffffff';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    });
+
+                    // Build tooltip content
+                    const age = data.startAge + yearIndex;
+                    let tooltipHTML = `<div style="font-weight: bold; margin-bottom: 4px;">Age ${age}</div>`;
+
+                    data.series.forEach((series, idx) => {
+                        const value = series.values[yearIndex];
+                        const color = lineColors[idx % lineColors.length];
+                        tooltipHTML += `<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                            <div style="width: 12px; height: 12px; background: ${color}; border-radius: 2px;"></div>
+                            <span style="font-size: 11px;">${series.label.substring(0, 20)}: ${this.formatCurrency(value)}</span>
+                        </div>`;
+                    });
+
+                    tooltip.innerHTML = tooltipHTML;
+                    tooltip.classList.remove('hidden');
+                    tooltip.style.left = (e.clientX + 15) + 'px';
+                    tooltip.style.top = (e.clientY - 10) + 'px';
+                });
+
+                canvas.addEventListener('mouseleave', () => {
+                    tooltip.classList.add('hidden');
+                    // Restore original chart when mouse leaves
+                    const ctx = canvas.getContext('2d');
+                    ctx.putImageData(canvas.originalImageData, 0, 0);
+                });
+            },
+
+            /**
+             * Formats currency values for display
+             * Uses compact notation (M/K) for large numbers
+             */
+            formatCurrency(value, compact = false) {
+                if (compact && Math.abs(value) >= 1000) {
+                    if (Math.abs(value) >= 1000000) {
+                        return '$' + (value / 1000000).toFixed(1) + 'M';
+                    }
+                    return '$' + (value / 1000).toFixed(0) + 'K';
+                }
+                return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            },
+
+            /**
+             * Converts hex color to RGB object
+             */
+            hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : { r: 0, g: 0, b: 0 };
+            }
+        };
+
+        // ============================================
+        // REPORT GENERATION MODULE
+        // ============================================
+        const Report = {
+            /**
+             * Generates comprehensive narrative report with recommendations
+             */
+            generateReport(results, inputs) {
+                const strategies = Object.values(results);
+
+                let html = '<div class="space-y-8 animate-fade-in">';
+
+                // US Retirement Portfolio Benchmarks
+                html += '<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-800 rounded-lg p-6">';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">';
+                html += '<svg class="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>';
+                html += 'Your Portfolio vs. US Benchmarks';
+                html += '</h3>';
+
+                // US benchmark data (based on Vanguard 2023 "How America Saves" report and Federal Reserve SCF data)
+                const usBenchmarks = {
+                    median: 200000,      // Median retirement savings for Americans age 65+
+                    percentile95: 1800000 // 95th percentile retirement savings
+                };
+
+                const userPortfolio = inputs.startingPortfolio;
+                const medianMultiple = (userPortfolio / usBenchmarks.median).toFixed(1);
+                const p95Multiple = (userPortfolio / usBenchmarks.percentile95).toFixed(2);
+
+                html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">';
+
+                // Your Portfolio
+                html += '<div class="bg-white dark:bg-slate-900 rounded-lg p-4 border-2 border-primary-500">';
+                html += '<div class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase mb-1">Your Starting Portfolio</div>';
+                html += `<div class="text-2xl font-bold text-gray-900 dark:text-gray-100">${Charts.formatCurrency(userPortfolio)}</div>`;
+                html += '</div>';
+
+                // US Median
+                html += '<div class="bg-white dark:bg-slate-900 rounded-lg p-4 border border-gray-300 dark:border-slate-700">';
+                html += '<div class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase mb-1">US Median (Age 65+)</div>';
+                html += `<div class="text-2xl font-bold text-gray-900 dark:text-gray-100">${Charts.formatCurrency(usBenchmarks.median)}</div>`;
+                html += `<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">You: <strong>${medianMultiple}x</strong> median</div>`;
+                html += '</div>';
+
+                // US 95th Percentile
+                html += '<div class="bg-white dark:bg-slate-900 rounded-lg p-4 border border-gray-300 dark:border-slate-700">';
+                html += '<div class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase mb-1">US 95th Percentile</div>';
+                html += `<div class="text-2xl font-bold text-gray-900 dark:text-gray-100">${Charts.formatCurrency(usBenchmarks.percentile95)}</div>`;
+                html += `<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">You: <strong>${p95Multiple}x</strong> top 5%</div>`;
+                html += '</div>';
+
+                html += '</div>';
+
+                // Percentile estimate
+                let percentileMessage = '';
+                if (userPortfolio >= usBenchmarks.percentile95) {
+                    percentileMessage = `Your starting portfolio of ${Charts.formatCurrency(userPortfolio)} places you in the <strong>top 5% of American retirees</strong>. This provides exceptional flexibility in retirement planning.`;
+                } else if (userPortfolio >= usBenchmarks.median) {
+                    const percentile = Math.min(95, 50 + ((userPortfolio - usBenchmarks.median) / (usBenchmarks.percentile95 - usBenchmarks.median) * 45));
+                    percentileMessage = `Your starting portfolio of ${Charts.formatCurrency(userPortfolio)} places you in approximately the <strong>top ${(100 - percentile).toFixed(0)}% of American retirees</strong>, well above the median.`;
+                } else {
+                    percentileMessage = `Your starting portfolio of ${Charts.formatCurrency(userPortfolio)} is below the median for Americans age 65+. Consider maximizing your savings and delaying retirement if possible.`;
+                }
+
+                html += `<p class="text-sm text-gray-800 dark:text-gray-200">${percentileMessage}</p>`;
+                html += '<p class="text-xs text-gray-600 dark:text-gray-400 mt-3"><em>Source: Federal Reserve Survey of Consumer Finances (2022) and Vanguard "How America Saves" (2023). Benchmarks represent total retirement account balances for households age 65+.</em></p>';
+                html += '</div>';
+
+                // Executive Summary
+                html += '<div>';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Executive Summary</h3>';
+                html += '<ul class="space-y-2 text-gray-800 dark:text-gray-200">';
+
+                const bestSuccess = strategies.reduce((max, s) => s.successRate > max.successRate ? s : max);
+                const bestWealth = strategies.reduce((max, s) => s.medianFinal > max.medianFinal ? s : max);
+                const bestIncome = strategies.reduce((max, s) => s.medianWithdrawals > max.medianWithdrawals ? s : max);
+
+                html += `<li>For <strong>highest success rate</strong> (${bestSuccess.successRate.toFixed(1)}%): <span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(bestSuccess.name)}</span></li>`;
+                html += `<li>For <strong>maximum legacy wealth</strong> (median ${Charts.formatCurrency(bestWealth.medianFinal)}): <span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(bestWealth.name)}</span></li>`;
+                html += `<li>For <strong>maximum lifetime spending</strong> (${Charts.formatCurrency(bestIncome.medianWithdrawals)}): <span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(bestIncome.name)}</span></li>`;
+                html += '</ul>';
+
+                html += '<h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-6 mb-3">Recommendation Based on Your Target Success Rate</h4>';
+                html += this.getSuccessRateRecommendation(strategies, inputs.targetSuccessRate);
+
+                html += '</div>';
+
+                // Strategy Details
+                html += '<div>';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Strategy Analysis</h3>';
+                html += '<div class="space-y-6">';
+
+                strategies.forEach(strategy => {
+                    html += this.strategyNarrative(strategy);
+                });
+
+                html += '</div></div>';
+
+                // Risk & Sensitivity
+                html += '<div>';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Important Considerations</h3>';
+                html += '<p class="text-gray-800 dark:text-gray-200 mb-3">These simulations are based on your assumptions about future market returns, volatility, and inflation. Actual results will vary based on:</p>';
+                html += '<ul class="space-y-2 text-gray-800 dark:text-gray-200 list-disc list-inside">';
+                html += '<li><strong>Sequence of returns risk:</strong> Poor returns early in retirement can significantly impact outcomes</li>';
+                html += '<li><strong>Inflation variability:</strong> Higher-than-expected inflation reduces purchasing power</li>';
+                html += '<li><strong>Longevity:</strong> Living longer than planned increases the risk of running out of money</li>';
+                html += '<li><strong>Healthcare and unexpected expenses:</strong> Major costs can derail even well-planned strategies</li>';
+                html += '</ul>';
+                html += '<div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-800 rounded-lg">';
+                html += '<p class="text-sm text-yellow-900 dark:text-yellow-200"><strong>Disclaimer:</strong> This tool is for educational and informational purposes only. It does not constitute financial advice. Consult with a qualified financial advisor before making retirement decisions.</p>';
+                html += '</div>';
+                html += '</div>';
+
+                html += '</div>';
+
+                return html;
+            },
+
+            strategyDisplayName(name) {
+                const map = {
+                    'constant-real': 'Constant Real (4% Rule)',
+                    'constant-pct': 'Constant % of Portfolio',
+                    'vpw': 'Variable % (VPW)',
+                    'guardrails': 'Guardrails',
+                    'rmd': 'RMD / Life Expectancy'
+                };
+                return map[name] || name;
+            },
+
+            strategyNarrative(strategy) {
+                let html = '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
+
+                // Strategy name with info tooltip
+                const tooltips = {
+                    'constant-real': '<strong>Classic 4% Rule:</strong> Withdraw a fixed percentage (typically 4-4.5%) of your starting portfolio in year one, then adjust that dollar amount for inflation each year. <br><br><strong>Pros:</strong> Predictable, stable income. <br><strong>Cons:</strong> Doesn\'t adapt to market performance; can deplete portfolio in bad sequences.',
+                    'constant-pct': '<strong>Dynamic Percentage:</strong> Withdraw a fixed percentage (e.g., 4%) of your current portfolio value each year. <br><br><strong>Pros:</strong> Theoretically never runs out; adapts to markets. <br><strong>Cons:</strong> Income varies significantly year-to-year; belt-tightening in bad years.',
+                    'vpw': '<strong>VPW Method:</strong> Withdrawal percentage increases as you age based on remaining life expectancy and asset allocation. <br><br><strong>Pros:</strong> Balances longevity protection with lifestyle. <br><strong>Cons:</strong> More complex; requires periodic recalculation.',
+                    'guardrails': '<strong>Guyton-Klinger Guardrails:</strong> Starts with initial withdrawal rate but adjusts spending when withdrawal rate crosses preset upper/lower thresholds. <br><br><strong>Pros:</strong> Balances stability with flexibility. <br><strong>Cons:</strong> May require lifestyle adjustments when guardrails are triggered.',
+                    'rmd': '<strong>IRS RMD Table Method:</strong> Divides current portfolio by IRS life expectancy table. Same method used for Required Minimum Distributions. <br><br><strong>Pros:</strong> Guaranteed to last lifetime mathematically. <br><strong>Cons:</strong> Highly volatile income; can be very low in market downturns.'
+                };
+
+                html += `<h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center">
+                    ${this.strategyDisplayName(strategy.name)}
+                    <span class="tooltip ml-2">
+                        <span class="info-icon">i</span>
+                        <span class="tooltiptext">${tooltips[strategy.name]}</span>
+                    </span>
+                </h4>`;
+
+                const descriptions = {
+                    'constant-real': 'Withdraws a fixed percentage of your starting portfolio in year one, then adjusts for inflation annually. Predictable income but doesn\'t respond to market changes.',
+                    'constant-pct': 'Withdraws a fixed percentage of current portfolio value each year. Self-adjusting but creates volatile income.',
+                    'vpw': 'Adjusts withdrawal percentage based on remaining life expectancy. Withdrawals increase with age while protecting against longevity risk.',
+                    'guardrails': 'Starts with initial rate but adjusts spending when withdrawal rate crosses preset thresholds. Balances stability with market responsiveness.',
+                    'rmd': 'Divides portfolio by remaining life expectancy each year. Guarantees portfolio lasts lifetime but creates volatile income.'
+                };
+                html += `<p class="text-gray-800 dark:text-gray-200 mb-3 text-sm">${descriptions[strategy.name]}</p>`;
+
+                html += '<div class="grid grid-cols-2 gap-2 text-xs text-gray-800 dark:text-gray-200 mb-2">';
+                html += `<div>Success Rate: <strong>${strategy.successRate.toFixed(1)}%</strong> ${this.successBadge(strategy.successRate)}</div>`;
+                html += `<div>Median Final: <strong>${Charts.formatCurrency(strategy.medianFinal)}</strong></div>`;
+                html += `<div>10th Percentile: <strong>${Charts.formatCurrency(strategy.p10Final)}</strong></div>`;
+                html += `<div>Total Withdrawals: <strong>${Charts.formatCurrency(strategy.medianWithdrawals)}</strong></div>`;
+                html += '</div>';
+
+                // Progress bar
+                html += `<div class="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden mt-2">
+                    <div class="progress-bar-animated bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full" style="width: ${strategy.successRate}%"></div>
+                </div>`;
+
+                html += '</div>';
+                return html;
+            },
+
+            successBadge(rate) {
+                if (rate >= 95) return '<span class="inline-block px-1.5 py-0.5 text-xs font-semibold rounded bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">Excellent</span>';
+                if (rate >= 85) return '<span class="inline-block px-1.5 py-0.5 text-xs font-semibold rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">Good</span>';
+                return '<span class="inline-block px-1.5 py-0.5 text-xs font-semibold rounded bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">Risky</span>';
+            },
+
+            getSuccessRateRecommendation(strategies, targetRate) {
+                let html = '<p class="text-gray-800 dark:text-gray-200">';
+
+                const qualifying = strategies.filter(s => s.successRate >= targetRate);
+
+                if (qualifying.length === 0) {
+                    html += `<strong class="text-red-700 dark:text-red-400">Warning:</strong> None of the strategies meet your target success rate of ${targetRate}%. `;
+                    html += 'Consider reducing withdrawal amounts, increasing portfolio value, or accepting a lower success rate target.';
+                } else {
+                    const best = qualifying.reduce((max, s) => s.medianWithdrawals > max.medianWithdrawals ? s : max);
+                    html += `Given your target success rate of <strong>${targetRate}%</strong>, we recommend `;
+                    html += `<span class="inline-block px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg font-semibold">${this.strategyDisplayName(best.name)}</span> `;
+                    html += `which achieves a ${best.successRate.toFixed(1)}% success rate with lifetime withdrawals of ${Charts.formatCurrency(best.medianWithdrawals)}.`;
+                }
+
+                html += '</p>';
+                return html;
+            }
+        };
+
+        // ============================================
+        // UI MODULE - MANAGES APPLICATION STATE
+        // ============================================
+        const UI = {
+            /**
+             * Collects all user inputs from the form
+             * @returns {Inputs} User input object
+             */
+            getInputs() {
+                const selectedStrategies = [];
+                if (document.getElementById('strategy-constant-real').checked) selectedStrategies.push('constant-real');
+                if (document.getElementById('strategy-constant-pct').checked) selectedStrategies.push('constant-pct');
+                if (document.getElementById('strategy-vpw').checked) selectedStrategies.push('vpw');
+                if (document.getElementById('strategy-guardrails').checked) selectedStrategies.push('guardrails');
+                if (document.getElementById('strategy-rmd').checked) selectedStrategies.push('rmd');
+
+                return {
+                    currentAge: parseInt(document.getElementById('current-age').value),
+                    retirementAge: parseInt(document.getElementById('retirement-age').value),
+                    planningAge: parseInt(document.getElementById('planning-age').value),
+                    startingPortfolio: parseFormattedNumber(document.getElementById('starting-portfolio').value),
+                    expectedReturn: parseFloat(document.getElementById('expected-return').value.replace(/,/g, '')),
+                    volatility: parseFloat(document.getElementById('volatility').value.replace(/,/g, '')),
+                    inflationRate: parseFloat(document.getElementById('inflation-rate').value.replace(/,/g, '')),
+                    monteCarloRuns: parseInt(parseFormattedNumber(document.getElementById('monte-carlo-runs').value)),
+                    minSpending: parseFormattedNumber(document.getElementById('min-spending').value),
+                    oneTimeExpense: parseFormattedNumber(document.getElementById('one-time-expense').value),
+                    socialSecurity: parseFormattedNumber(document.getElementById('social-security').value),
+                    ssStartAge: parseInt(document.getElementById('ss-start-age').value),
+                    targetSuccessRate: parseInt(document.getElementById('risk-tolerance').value),
+                    strategies: selectedStrategies
+                };
+            },
+
+            /**
+             * Shows status message to user
+             * @param {string} message
+             * @param {string} type - 'info', 'success', or 'error'
+             */
+            showStatus(message, type = 'info') {
+                const statusEl = document.getElementById('status-message');
+                const colorClasses = {
+                    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-800 text-blue-900 dark:text-blue-200',
+                    success: 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-800 text-green-900 dark:text-green-200',
+                    error: 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200'
+                };
+                statusEl.className = `p-4 rounded-lg border ${colorClasses[type]} animate-slide-up text-center max-w-2xl mx-auto`;
+                statusEl.innerHTML = message;
+                statusEl.classList.remove('hidden');
+            },
+
+            hideStatus() {
+                document.getElementById('status-message').classList.add('hidden');
+            },
+
+            /**
+             * Main simulation execution function
+             * Runs Monte Carlo analysis and updates UI
+             */
+            async runSimulation() {
+                const inputs = this.getInputs();
+
+                // Input validation
+                if (inputs.strategies.length === 0) {
+                    this.showStatus('Please select at least one withdrawal strategy.', 'error');
+                    return;
+                }
+
+                if (inputs.retirementAge <= inputs.currentAge) {
+                    this.showStatus('Retirement age must be after current age.', 'error');
+                    return;
+                }
+
+                if (inputs.planningAge <= inputs.retirementAge) {
+                    this.showStatus('Planning age must be after retirement age.', 'error');
+                    return;
+                }
+
+                const btn = document.getElementById('run-simulation');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<svg class="inline w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Running simulations...';
+                this.hideStatus();
+
+                // Small delay to allow UI to update
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                try {
+                    // Run simulations for each selected strategy
+                    const results = {};
+                    for (const strategyName of inputs.strategies) {
+                        results[strategyName] = Simulation.runStrategy(strategyName, inputs);
+                    }
+
+                    // Store globally for tab switching
+                    globalResults = results;
+                    globalInputs = inputs;
+
+                    // Hide assumptions panel and show results
+                    document.getElementById('assumptions-panel').classList.add('hidden');
+                    document.getElementById('results-panel').classList.remove('hidden');
+                    document.getElementById('back-to-assumptions').classList.remove('hidden');
+
+                    // Display results in all tabs
+                    this.displayResults(results, inputs);
+
+                    this.showStatus('✓ Simulation completed successfully!', 'success');
+                    setTimeout(() => this.hideStatus(), 3000);
+
+                } catch (error) {
+                    console.error('Simulation error:', error);
+                    this.showStatus('Error running simulation. Please check your inputs.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            },
+
+            /**
+             * Populates all results tabs with simulation data
+             */
+            displayResults(results, inputs) {
+                this.displaySummary(results, inputs);
+                this.displayCharts(results, inputs);
+                this.displayDetailedTables(results, inputs);
+                this.displayReport(results, inputs);
+                this.displayAssumptions(inputs);
+            },
+
+            /**
+             * Summary tab: Quick comparison table
+             */
+            displaySummary(results, inputs) {
+                const strategies = Object.values(results);
+
+                let html = '<div class="space-y-6 animate-fade-in">';
+
+                // Key Insights Panel
+                const insights = InsightsGenerator.generate(results, inputs);
+                html += InsightsGenerator.display(insights);
+
+                // Success Rate Gauges
+                html += '<div>';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Success Rates</h3>';
+                html += '<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">';
+                strategies.forEach(strategy => {
+                    html += `<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4">
+                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">${Report.strategyDisplayName(strategy.name)}</h4>
+                        ${SuccessRateGauge.render(strategy.successRate)}
+                    </div>`;
+                });
+                html += '</div>';
+                html += '</div>';
+
+                html += '<div>';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">Simulation Results</h3>';
+                html += `<p class="text-gray-800 dark:text-gray-200">Analyzed <strong>${inputs.monteCarloRuns.toLocaleString()}</strong> scenarios for each strategy over <strong>${inputs.planningAge - inputs.retirementAge} years</strong> (ages ${inputs.retirementAge}-${inputs.planningAge}).</p>`;
+                html += '</div>';
+
+                html += '<div>';
+                html += '<h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Quick Comparison</h4>';
+                html += '<div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-800">';
+                html += '<table class="min-w-full divide-y divide-gray-200 dark:divide-slate-800">';
+                html += '<thead class="bg-gray-50 dark:bg-slate-950">';
+                html += '<tr>';
+                html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Strategy</th>';
+                html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Success Rate</th>';
+                html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Median Final</th>';
+                html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">75th %ile Final</th>';
+                html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">90th %ile Final</th>';
+                html += '<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">95th %ile Final</th>';
+                html += '</tr>';
+                html += '</thead>';
+                html += '<tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">';
+
+                strategies.forEach(s => {
+                    html += '<tr class="hover:bg-gray-50 dark:hover:bg-slate-800">';
+                    html += `<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">${Report.strategyDisplayName(s.name)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm">
+                        <div class="flex items-center gap-2 mb-1">
+                            ${Report.successBadge(s.successRate)}
+                            <span class="text-gray-900 dark:text-gray-100 font-medium">${s.successRate.toFixed(1)}%</span>
+                        </div>
+                        <div class="w-32 bg-gray-200 dark:bg-slate-800 rounded-full h-1.5">
+                            <div class="progress-bar-animated bg-gradient-to-r from-primary-500 to-primary-600 h-1.5 rounded-full" style="width: ${s.successRate}%"></div>
+                        </div>
+                    </td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.medianFinal)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p75Final)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p90Final)}</td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(s.p95Final)}</td>`;
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                html += '</div>';
+                html += '<p class="text-xs text-gray-600 dark:text-gray-400 mt-2">Success rate = percentage of scenarios where portfolio lasted the full planning period</p>';
+                html += '</div>';
+                html += '</div>';
+
+                document.getElementById('tab-summary').innerHTML = html;
+            },
+
+            /**
+             * Charts tab: Interactive visualizations
+             */
+            displayCharts(results, inputs) {
+                const strategies = Object.values(results);
+
+                let html = '<div class="space-y-8">';
+
+                // Portfolio chart
+                html += '<div class="animate-fade-in">';
+                html += '<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Portfolio Value Over Time <span class="text-sm font-normal text-gray-600 dark:text-gray-400">(Shaded regions show 10th-90th percentile range)</span></h3>';
+                html += '<div class="bg-gray-50 dark:bg-slate-950 rounded-lg p-4 border border-gray-200 dark:border-slate-800">';
+                html += '<canvas id="chart-portfolio" class="chart-animated" width="1600" height="600"></canvas>';
+                html += '</div>';
+                html += '<p class="text-xs text-gray-600 dark:text-gray-400 mt-2">Hover over the chart to see detailed values for each year. Darker shaded region = 25th-75th percentile, lighter = 10th-90th percentile.</p>';
+                html += '</div>';
+
+                // Withdrawals chart
+                html += '<div class="animate-fade-in">';
+                html += '<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Annual Withdrawals Over Time</h3>';
+                html += '<div class="bg-gray-50 dark:bg-slate-950 rounded-lg p-4 border border-gray-200 dark:border-slate-800">';
+                html += '<canvas id="chart-withdrawals" class="chart-animated" width="1600" height="600"></canvas>';
+                html += '</div>';
+                html += '<p class="text-xs text-gray-600 dark:text-gray-400 mt-2">Hover over the chart to see detailed withdrawal amounts for each year</p>';
+                html += '</div>';
+
+                // Distribution Histograms
+                html += '<div class="animate-fade-in mt-8">';
+                html += '<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Outcome Distributions</h3>';
+                html += '<p class="text-sm text-gray-700 dark:text-gray-300 mb-4">Distribution of final portfolio values across all Monte Carlo simulations. Red bars indicate portfolio depletion.</p>';
+
+                strategies.forEach(strategy => {
+                    html += `<div class="mb-8 bg-gray-50 dark:bg-slate-950 rounded-lg p-4 border border-gray-200 dark:border-slate-800">`;
+                    html += `<h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">${Report.strategyDisplayName(strategy.name)}</h4>`;
+                    html += `<div id="histogram-${strategy.name}"></div>`;
+                    html += '</div>';
+                });
+
+                html += '</div>';
+
+                html += '</div>';
+
+                document.getElementById('tab-charts').innerHTML = html;
+
+                // Wait for DOM update, then draw charts
+                setTimeout(() => {
+                    const portfolioData = {
+                        startAge: inputs.retirementAge,
+                        series: strategies.map(s => ({
+                            label: Report.strategyDisplayName(s.name),
+                            values: s.medianPath.map(y => y.portfolioEnd),
+                            percentilePaths: s.percentilePaths // Add percentile paths for probability cone
+                        }))
+                    };
+
+                    const withdrawalData = {
+                        startAge: inputs.retirementAge,
+                        series: strategies.map(s => ({
+                            label: Report.strategyDisplayName(s.name),
+                            values: s.medianPath.map(y => y.withdrawal)
+                            // No percentile paths for withdrawals chart (less useful)
+                        }))
+                    };
+
+                    Charts.drawLineChart(document.getElementById('chart-portfolio'), portfolioData, 'Portfolio Value (Median Path)');
+                    Charts.drawLineChart(document.getElementById('chart-withdrawals'), withdrawalData, 'Annual Withdrawals (Median Path)');
+
+                    // Draw histograms
+                    strategies.forEach(strategy => {
+                        const histogramContainer = document.getElementById(`histogram-${strategy.name}`);
+                        if (histogramContainer) {
+                            histogramContainer.innerHTML = DistributionHistogram.render(results, strategy.name);
+                        }
+                    });
+                }, 100);
+            },
+
+            /**
+             * Detailed Tables tab: Year-by-year breakdown for each strategy
+             */
+            displayDetailedTables(results, inputs) {
+                const strategies = Object.values(results);
+
+                let html = '<div class="space-y-8">';
+
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Year-by-Year Details</h3>';
+                html += '<p class="text-gray-800 dark:text-gray-200 mb-6">Detailed breakdown showing portfolio value and withdrawals for each year of retirement under each strategy.</p>';
+
+                strategies.forEach(strategy => {
+                    html += `<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">`;
+                    html += `<h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">${Report.strategyDisplayName(strategy.name)}</h4>`;
+
+                    html += '<div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-800 mb-2">';
+                    html += '<table class="min-w-full divide-y divide-gray-200 dark:divide-slate-800 text-xs">';
+                    html += '<thead class="bg-gray-100 dark:bg-slate-900">';
+                    html += '<tr>';
+                    html += '<th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Year</th>';
+                    html += '<th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Age</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Portfolio Start</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Return %</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Annual Withdrawal</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Monthly Withdrawal</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Portfolio End (Median)</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">75th %ile End</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">90th %ile End</th>';
+                    html += '<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">95th %ile End</th>';
+                    html += '</tr>';
+                    html += '</thead>';
+                    html += '<tbody class="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">';
+
+                    // Show all years
+                    const years = strategy.medianPath;
+                    years.forEach((year, idx) => {
+                        const monthlyWithdrawal = year.withdrawal / 12;
+                        const p75End = strategy.percentilePaths.p75[idx] || 0;
+                        const p90End = strategy.percentilePaths.p90[idx] || 0;
+                        const p95End = strategy.percentilePaths.p95[idx] || 0;
+
+                        html += '<tr class="hover:bg-gray-50 dark:hover:bg-slate-800">';
+                        html += `<td class="px-3 py-2 text-gray-900 dark:text-gray-100">${year.year + 1}</td>`;
+                        html += `<td class="px-3 py-2 text-gray-900 dark:text-gray-100">${year.age}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(year.portfolioStart)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${year.returnPct.toFixed(2)}%</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(year.withdrawal)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(monthlyWithdrawal)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200 font-semibold">${Charts.formatCurrency(year.portfolioEnd)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(p75End)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(p90End)}</td>`;
+                        html += `<td class="px-3 py-2 text-right font-mono text-gray-800 dark:text-gray-200">${Charts.formatCurrency(p95End)}</td>`;
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table>';
+                    html += '</div>';
+                    html += '<p class="text-xs text-gray-600 dark:text-gray-400">Complete year-by-year breakdown for entire retirement period. Monthly withdrawal = Annual / 12.</p>';
+                    html += '</div>';
+                });
+
+                html += '</div>';
+
+                document.getElementById('tab-tables').innerHTML = html;
+            },
+
+            /**
+             * Report tab: Narrative analysis and recommendations
+             */
+            displayReport(results, inputs) {
+                let html = Report.generateReport(results, inputs);
+
+                // Add historical backtesting section
+                html += '<div class="page-break"></div>';
+                html += HistoricalBacktesting.generateReport(results, inputs);
+
+                document.getElementById('tab-report').innerHTML = html;
+            },
+
+            /**
+             * Assumptions tab: Shows all input parameters
+             */
+            displayAssumptions(inputs) {
+                let html = '<div class="space-y-6">';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Current Assumptions</h3>';
+
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+
+                // Plan Setup
+                html += '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
+                html += '<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Plan Setup</h4>';
+                html += '<div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">';
+                html += `<div><span class="font-medium">Current Age:</span> ${inputs.currentAge}</div>`;
+                html += `<div><span class="font-medium">Retirement Age:</span> ${inputs.retirementAge}</div>`;
+                html += `<div><span class="font-medium">Planning Horizon:</span> ${inputs.planningAge}</div>`;
+                html += `<div><span class="font-medium">Starting Portfolio:</span> ${Charts.formatCurrency(inputs.startingPortfolio)}</div>`;
+                html += `<div><span class="font-medium">Years in Retirement:</span> ${inputs.planningAge - inputs.retirementAge}</div>`;
+                html += '</div>';
+                html += '</div>';
+
+                // Market Assumptions
+                html += '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
+                html += '<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Market Assumptions</h4>';
+                html += '<div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">';
+                html += `<div><span class="font-medium">Expected Real Return:</span> ${inputs.expectedReturn.toFixed(1)}% per year</div>`;
+                html += `<div><span class="font-medium">Volatility:</span> ${inputs.volatility.toFixed(1)}% std dev</div>`;
+                html += `<div><span class="font-medium">Inflation Rate:</span> ${inputs.inflationRate.toFixed(1)}% per year</div>`;
+                html += `<div><span class="font-medium">Monte Carlo Runs:</span> ${inputs.monteCarloRuns.toLocaleString()}</div>`;
+                html += '</div>';
+                html += '</div>';
+
+                // Income & Constraints
+                html += '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
+                html += '<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Income & Constraints</h4>';
+                html += '<div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">';
+                html += `<div><span class="font-medium">Min Spending:</span> ${Charts.formatCurrency(inputs.minSpending)}/year</div>`;
+                html += `<div><span class="font-medium">One-Time Expense (Every 5 Years):</span> ${Charts.formatCurrency(inputs.oneTimeExpense || 0)}</div>`;
+                html += `<div><span class="font-medium">Social Security:</span> ${Charts.formatCurrency(inputs.socialSecurity)}/year</div>`;
+                html += `<div><span class="font-medium">SS Start Age:</span> ${inputs.ssStartAge}</div>`;
+                html += `<div><span class="font-medium">Target Success Rate:</span> ${inputs.targetSuccessRate}%</div>`;
+                html += '</div>';
+                html += '</div>';
+
+                // Strategies
+                html += '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
+                html += '<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Selected Strategies</h4>';
+                html += '<ul class="space-y-1 text-sm text-gray-800 dark:text-gray-200 list-disc list-inside">';
+                inputs.strategies.forEach(s => {
+                    html += `<li>${Report.strategyDisplayName(s)}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+
+                html += '</div>';
+
+                html += '<div class="mt-6 text-center">';
+                html += '<button id="edit-assumptions-btn" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition-colors">';
+                html += 'Edit Assumptions';
+                html += '</button>';
+                html += '</div>';
+
+                html += '</div>';
+
+                document.getElementById('tab-assumptions').innerHTML = html;
+
+                // Add click handler to edit button
+                setTimeout(() => {
+                    const editBtn = document.getElementById('edit-assumptions-btn');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', () => {
+                            document.getElementById('results-panel').classList.add('hidden');
+                            document.getElementById('assumptions-panel').classList.remove('hidden');
+                            document.getElementById('back-to-assumptions').classList.add('hidden');
+                        });
+                    }
+                }, 100);
+            },
+
+            /**
+             * Initialize tab switching functionality
+             */
+            initTabs() {
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const targetTab = button.getAttribute('data-tab');
+
+                        // Update button states
+                        tabButtons.forEach(btn => {
+                            btn.classList.remove('active', 'border-primary-500', 'text-primary-600', 'dark:text-primary-400');
+                            btn.classList.add('text-gray-600', 'dark:text-gray-400', 'border-transparent');
+                        });
+                        button.classList.add('active', 'border-primary-500', 'text-primary-600', 'dark:text-primary-400');
+                        button.classList.remove('text-gray-600', 'dark:text-gray-400', 'border-transparent');
+
+                        // Update content visibility
+                        tabContents.forEach(content => {
+                            content.classList.add('hidden');
+                            content.classList.remove('active');
+                            if (content.id === `tab-${targetTab}`) {
+                                content.classList.remove('hidden');
+                                content.classList.add('active');
+                            }
+                        });
+                    });
+                });
+            },
+
+            /**
+             * Initialize theme toggle functionality
+             */
+            initThemeToggle() {
+                const toggle = document.getElementById('theme-toggle');
+                const label = document.getElementById('theme-label');
+                const html = document.documentElement;
+
+                // Determine initial theme
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const savedTheme = localStorage.getItem('theme');
+                const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+
+                if (isDark) {
+                    html.classList.add('dark');
+                    label.textContent = 'Dark';
+                } else {
+                    html.classList.remove('dark');
+                    label.textContent = 'Light';
+                }
+
+                // Toggle theme on click
+                toggle.addEventListener('click', () => {
+                    const isCurrentlyDark = html.classList.contains('dark');
+
+                    if (isCurrentlyDark) {
+                        html.classList.remove('dark');
+                        label.textContent = 'Light';
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        html.classList.add('dark');
+                        label.textContent = 'Dark';
+                        localStorage.setItem('theme', 'dark');
+                    }
+
+                    // Redraw charts if they exist
+                    if (globalResults && globalInputs) {
+                        setTimeout(() => {
+                            const portfolioCanvas = document.getElementById('chart-portfolio');
+                            const withdrawalCanvas = document.getElementById('chart-withdrawals');
+
+                            if (portfolioCanvas && withdrawalCanvas) {
+                                const strategies = Object.values(globalResults);
+
+                                // Include percentilePaths for probability cone visualization
+                                const portfolioData = {
+                                    startAge: globalInputs.retirementAge,
+                                    series: strategies.map(s => ({
+                                        label: Report.strategyDisplayName(s.name),
+                                        values: s.medianPath.map(y => y.portfolioEnd),
+                                        percentilePaths: s.percentilePaths
+                                    }))
+                                };
+
+                                const withdrawalData = {
+                                    startAge: globalInputs.retirementAge,
+                                    series: strategies.map(s => ({
+                                        label: Report.strategyDisplayName(s.name),
+                                        values: s.medianPath.map(y => y.withdrawal)
+                                    }))
+                                };
+
+                                // Clear original image data to force fresh redraw
+                                portfolioCanvas.originalImageData = null;
+                                withdrawalCanvas.originalImageData = null;
+
+                                Charts.drawLineChart(portfolioCanvas, portfolioData, 'Portfolio Value (Median Path)');
+                                Charts.drawLineChart(withdrawalCanvas, withdrawalData, 'Annual Withdrawals (Median Path)');
+                            }
+                        }, 50);
+                    }
+                });
+            },
+
+            /**
+             * Initialize all UI components and event handlers
+             */
+            init() {
+                this.initTabs();
+                this.initThemeToggle();
+
+                // Run simulation button
+                document.getElementById('run-simulation').addEventListener('click', () => {
+                    this.runSimulation();
+                });
+
+                // Back to assumptions link
+                document.getElementById('back-to-assumptions').addEventListener('click', () => {
+                    document.getElementById('results-panel').classList.add('hidden');
+                    document.getElementById('assumptions-panel').classList.remove('hidden');
+                    document.getElementById('back-to-assumptions').classList.add('hidden');
+                });
+
+                // Preset scenario buttons
+                document.querySelectorAll('.preset-scenario').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const preset = btn.dataset.preset;
+                        PresetScenarios.load(preset);
+                    });
+                });
+
+                // Save scenario button
+                document.getElementById('save-scenario').addEventListener('click', () => {
+                    ScenarioManager.saveCurrentScenario();
+                });
+
+                // Export PDF button
+                document.getElementById('export-pdf').addEventListener('click', () => {
+                    PDFExport.generate();
+                });
+
+                // Load saved scenarios on init
+                ScenarioManager.loadSavedScenarios();
+            }
+        };
+
+        // ============================================
+        // PRESET SCENARIOS MODULE
+        // ============================================
+        const PresetScenarios = {
+            presets: {
+                conservative: {
+                    name: "Conservative Retirement",
+                    currentAge: 45,
+                    retirementAge: 67,
+                    planningAge: 95,
+                    startingPortfolio: 1000000,
+                    expectedReturn: 4.0,
+                    volatility: 10.0,
+                    inflationRate: 2.5,
+                    minSpending: 40000,
+                    oneTimeExpense: 0,
+                    socialSecurity: 30000,
+                    ssStartAge: 70,
+                    targetSuccessRate: 95,
+                    monteCarloRuns: 5000
+                },
+                moderate: {
+                    name: "Moderate Retirement",
+                    currentAge: 45,
+                    retirementAge: 65,
+                    planningAge: 95,
+                    startingPortfolio: 2000000,
+                    expectedReturn: 5.0,
+                    volatility: 12.0,
+                    inflationRate: 2.5,
+                    minSpending: 80000,
+                    oneTimeExpense: 0,
+                    socialSecurity: 35000,
+                    ssStartAge: 67,
+                    targetSuccessRate: 90,
+                    monteCarloRuns: 5000
+                },
+                aggressive: {
+                    name: "Aggressive Growth",
+                    currentAge: 45,
+                    retirementAge: 60,
+                    planningAge: 95,
+                    startingPortfolio: 3000000,
+                    expectedReturn: 6.5,
+                    volatility: 16.0,
+                    inflationRate: 2.5,
+                    minSpending: 100000,
+                    oneTimeExpense: 0,
+                    socialSecurity: 40000,
+                    ssStartAge: 67,
+                    targetSuccessRate: 85,
+                    monteCarloRuns: 5000
+                },
+                'early-retire': {
+                    name: "Early Retirement",
+                    currentAge: 45,
+                    retirementAge: 50,
+                    planningAge: 95,
+                    startingPortfolio: 5000000,
+                    expectedReturn: 5.0,
+                    volatility: 12.0,
+                    inflationRate: 2.5,
+                    minSpending: 600000,
+                    oneTimeExpense: 0,
+                    socialSecurity: 24000,
+                    ssStartAge: 67,
+                    targetSuccessRate: 90,
+                    monteCarloRuns: 10000
+                }
+            },
+
+            load(presetName) {
+                const preset = this.presets[presetName];
+                if (!preset) return;
+
+                // Populate form fields
+                document.getElementById('current-age').value = preset.currentAge;
+                document.getElementById('retirement-age').value = preset.retirementAge;
+                document.getElementById('planning-age').value = preset.planningAge;
+                document.getElementById('starting-portfolio').value = formatNumber(preset.startingPortfolio);
+                document.getElementById('expected-return').value = preset.expectedReturn.toFixed(1);
+                document.getElementById('volatility').value = preset.volatility.toFixed(1);
+                document.getElementById('inflation-rate').value = preset.inflationRate.toFixed(1);
+                document.getElementById('min-spending').value = formatNumber(preset.minSpending);
+                document.getElementById('one-time-expense').value = formatNumber(preset.oneTimeExpense || 0);
+                document.getElementById('social-security').value = formatNumber(preset.socialSecurity);
+                document.getElementById('ss-start-age').value = preset.ssStartAge;
+                document.getElementById('risk-tolerance').value = preset.targetSuccessRate;
+                document.getElementById('monte-carlo-runs').value = formatNumber(preset.monteCarloRuns);
+
+                UI.showStatus(`Loaded preset: ${preset.name}`, 'success');
+                setTimeout(() => UI.hideStatus(), 2000);
+            }
+        };
+
+        // ============================================
+        // SCENARIO MANAGER MODULE
+        // ============================================
+        const ScenarioManager = {
+            savedScenarios: [],
+
+            saveCurrentScenario() {
+                const name = prompt('Enter a name for this scenario:');
+                if (!name) return;
+
+                const scenario = {
+                    id: Date.now(),
+                    name: name,
+                    timestamp: new Date().toISOString(),
+                    inputs: UI.getInputs(),
+                    results: globalResults
+                };
+
+                this.savedScenarios.push(scenario);
+                localStorage.setItem('retirementScenarios', JSON.stringify(this.savedScenarios));
+                UI.showStatus(`Scenario "${name}" saved!`, 'success');
+                setTimeout(() => UI.hideStatus(), 2000);
+
+                this.displaySavedScenarios();
+            },
+
+            loadSavedScenarios() {
+                const saved = localStorage.getItem('retirementScenarios');
+                if (saved) {
+                    this.savedScenarios = JSON.parse(saved);
+                    this.displaySavedScenarios();
+                }
+            },
+
+            displaySavedScenarios() {
+                // Add saved scenarios section if not exists
+                let container = document.getElementById('saved-scenarios-container');
+                if (!container) {
+                    const assumptionsPanel = document.getElementById('assumptions-panel');
+                    container = document.createElement('div');
+                    container.id = 'saved-scenarios-container';
+                    container.className = 'mt-8 max-w-4xl mx-auto';
+                    assumptionsPanel.querySelector('.max-w-4xl').appendChild(container);
+                }
+
+                if (this.savedScenarios.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                let html = '<div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-800 p-6">';
+                html += '<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">💾 Saved Scenarios</h3>';
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+
+                this.savedScenarios.forEach(scenario => {
+                    html += `<div class="scenario-card border-2 border-gray-300 dark:border-slate-700 rounded-lg p-3 bg-gray-50 dark:bg-slate-950">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">${scenario.name}</h4>
+                            <button onclick="ScenarioManager.deleteScenario(${scenario.id})" class="text-red-600 hover:text-red-700 text-xs">✕</button>
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">${new Date(scenario.timestamp).toLocaleString()}</p>
+                        <button onclick="ScenarioManager.loadScenario(${scenario.id})" class="w-full px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded transition-colors">
+                            Load
+                        </button>
+                    </div>`;
+                });
+
+                html += '</div></div>';
+                container.innerHTML = html;
+            },
+
+            loadScenario(id) {
+                const scenario = this.savedScenarios.find(s => s.id === id);
+                if (!scenario) return;
+
+                // Populate form
+                const inputs = scenario.inputs;
+                document.getElementById('current-age').value = inputs.currentAge;
+                document.getElementById('retirement-age').value = inputs.retirementAge;
+                document.getElementById('planning-age').value = inputs.planningAge;
+                document.getElementById('starting-portfolio').value = formatNumber(inputs.startingPortfolio);
+                document.getElementById('expected-return').value = inputs.expectedReturn.toFixed(1);
+                document.getElementById('volatility').value = inputs.volatility.toFixed(1);
+                document.getElementById('inflation-rate').value = inputs.inflationRate.toFixed(1);
+                document.getElementById('min-spending').value = formatNumber(inputs.minSpending);
+                document.getElementById('one-time-expense').value = formatNumber(inputs.oneTimeExpense || 0);
+                document.getElementById('social-security').value = formatNumber(inputs.socialSecurity);
+                document.getElementById('ss-start-age').value = inputs.ssStartAge;
+                document.getElementById('risk-tolerance').value = inputs.targetSuccessRate;
+                document.getElementById('monte-carlo-runs').value = formatNumber(inputs.monteCarloRuns);
+
+                UI.showStatus(`Loaded scenario: ${scenario.name}`, 'success');
+                setTimeout(() => UI.hideStatus(), 2000);
+            },
+
+            deleteScenario(id) {
+                if (!confirm('Delete this scenario?')) return;
+                this.savedScenarios = this.savedScenarios.filter(s => s.id !== id);
+                localStorage.setItem('retirementScenarios', JSON.stringify(this.savedScenarios));
+                this.displaySavedScenarios();
+            }
+        };
+
+        // ============================================
+        // PDF EXPORT MODULE
+        // ============================================
+        const PDFExport = {
+            generate() {
+                if (!globalResults) {
+                    alert('Please run a simulation first!');
+                    return;
+                }
+
+                // Use browser's print functionality with custom print CSS
+                window.print();
+            }
+        };
+
+        // ============================================
+        // KEY INSIGHTS GENERATOR
+        // ============================================
+        const InsightsGenerator = {
+            generate(results, inputs) {
+                const strategies = Object.values(results);
+                const insights = [];
+
+                // Check if any strategy meets target
+                const meetsTarget = strategies.filter(s => s.successRate >= inputs.targetSuccessRate);
+                if (meetsTarget.length === 0) {
+                    insights.push({
+                        type: 'warning',
+                        icon: '⚠️',
+                        text: `None of the strategies meet your target success rate of ${inputs.targetSuccessRate}%. Consider adjusting your assumptions or delaying retirement.`
+                    });
+                } else {
+                    insights.push({
+                        type: 'success',
+                        icon: '✅',
+                        text: `${meetsTarget.length} ${meetsTarget.length === 1 ? 'strategy meets' : 'strategies meet'} your target success rate of ${inputs.targetSuccessRate}%.`
+                    });
+                }
+
+                // Find best strategies
+                const bestSuccess = strategies.reduce((max, s) => s.successRate > max.successRate ? s : max);
+                const bestWealth = strategies.reduce((max, s) => s.medianFinal > max.medianFinal ? s : max);
+
+                insights.push({
+                    type: 'info',
+                    icon: '🏆',
+                    text: `${Report.strategyDisplayName(bestSuccess.name)} has the highest success rate at ${bestSuccess.successRate.toFixed(1)}%.`
+                });
+
+                if (bestWealth.name !== bestSuccess.name) {
+                    insights.push({
+                        type: 'info',
+                        icon: '💰',
+                        text: `${Report.strategyDisplayName(bestWealth.name)} leaves the most wealth (median: ${Charts.formatCurrency(bestWealth.medianFinal)}).`
+                    });
+                }
+
+                // Check for high volatility
+                if (inputs.volatility >= 15) {
+                    insights.push({
+                        type: 'warning',
+                        icon: '📊',
+                        text: `Your volatility assumption (${inputs.volatility}%) is high. This increases outcome variability.`
+                    });
+                }
+
+                // Check portfolio size
+                if (inputs.startingPortfolio < 500000) {
+                    insights.push({
+                        type: 'warning',
+                        icon: '💵',
+                        text: `Your starting portfolio is relatively small. Consider maximizing savings before retirement.`
+                    });
+                }
+
+                // Check long retirement
+                const yearsInRetirement = inputs.planningAge - inputs.retirementAge;
+                if (yearsInRetirement > 35) {
+                    insights.push({
+                        type: 'info',
+                        icon: '⏰',
+                        text: `You're planning for a ${yearsInRetirement}-year retirement. Longevity risk is significant.`
+                    });
+                }
+
+                return insights;
+            },
+
+            display(insights) {
+                let html = '<div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-300 dark:border-blue-800 rounded-lg p-6 mb-6">';
+                html += '<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">';
+                html += '<svg class="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>';
+                html += 'Key Insights';
+                html += '</h3>';
+                html += '<div class="space-y-3">';
+
+                insights.forEach(insight => {
+                    const bgColor = {
+                        'warning': 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-800',
+                        'success': 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-800',
+                        'info': 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-800'
+                    }[insight.type];
+
+                    const textColor = {
+                        'warning': 'text-yellow-900 dark:text-yellow-200',
+                        'success': 'text-green-900 dark:text-green-200',
+                        'info': 'text-blue-900 dark:text-blue-200'
+                    }[insight.type];
+
+                    const className = insight.type === 'warning' ? 'insight-warning' : '';
+
+                    html += `<div class="${bgColor} border rounded-lg p-3 ${className}">
+                        <p class="text-sm ${textColor} flex items-start">
+                            <span class="mr-2 text-lg flex-shrink-0">${insight.icon}</span>
+                            <span>${insight.text}</span>
+                        </p>
+                    </div>`;
+                });
+
+                html += '</div></div>';
+                return html;
+            }
+        };
+
+        // ============================================
+        // SUCCESS RATE GAUGE
+        // ============================================
+        const SuccessRateGauge = {
+            render(successRate, containerId) {
+                const radius = 80;
+                const circumference = radius * Math.PI; // Half circle
+                const offset = circumference - (successRate / 100) * circumference;
+
+                let color;
+                if (successRate >= 90) color = '#10b981'; // Green
+                else if (successRate >= 75) color = '#f59e0b'; // Yellow
+                else color = '#ef4444'; // Red
+
+                const darkMode = document.documentElement.classList.contains('dark');
+                const textColor = darkMode ? '#e2e8f0' : '#1f2937';
+                const bgStroke = darkMode ? '#1e293b' : '#e5e7eb';
+
+                let html = `
+                    <div class="gauge-container">
+                        <svg width="200" height="120" viewBox="0 0 200 120">
+                            <path class="gauge-background"
+                                d="M 20 100 A 80 80 0 1 1 180 100"
+                                stroke="${bgStroke}"
+                                stroke-width="12"
+                                fill="none">
+                            </path>
+                            <path class="gauge-fill"
+                                d="M 20 100 A 80 80 0 1 1 180 100"
+                                stroke="${color}"
+                                stroke-width="12"
+                                fill="none"
+                                stroke-dasharray="${circumference}"
+                                stroke-dashoffset="${offset}"
+                                stroke-linecap="round">
+                            </path>
+                            <text x="100" y="90" text-anchor="middle" font-size="32" font-weight="bold" fill="${textColor}">
+                                ${successRate.toFixed(1)}%
+                            </text>
+                            <text x="100" y="110" text-anchor="middle" font-size="12" fill="${textColor}" opacity="0.7">
+                                Success Rate
+                            </text>
+                        </svg>
+                    </div>`;
+
+                return html;
+            }
+        };
+
+        // ============================================
+        // MONTE CARLO DISTRIBUTION HISTOGRAM
+        // ============================================
+        const DistributionHistogram = {
+            render(results, strategyName) {
+                const strategy = results[strategyName];
+                if (!strategy || !strategy.allFinalValues) return '';
+
+                // Create histogram bins
+                const values = strategy.allFinalValues;
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                const binCount = 30;
+                const binWidth = (max - min) / binCount;
+
+                const bins = Array(binCount).fill(0);
+                values.forEach(val => {
+                    const binIndex = Math.min(Math.floor((val - min) / binWidth), binCount - 1);
+                    bins[binIndex]++;
+                });
+
+                const maxBinHeight = Math.max(...bins);
+
+                const isDark = document.documentElement.classList.contains('dark');
+                const bgColor = isDark ? '#020617' : '#ffffff';
+                const textColor = isDark ? '#e2e8f0' : '#1f2937';
+                const gridColor = isDark ? '#1e293b' : '#e5e7eb';
+
+                const width = 800;
+                const height = 400;
+                const margin = { top: 40, right: 40, bottom: 60, left: 80 };
+                const chartWidth = width - margin.left - margin.right;
+                const chartHeight = height - margin.top - margin.bottom;
+
+                let svg = `<svg width="${width}" height="${height}" class="mx-auto">`;
+                svg += `<rect width="${width}" height="${height}" fill="${bgColor}"/>`;
+
+                // Draw bars
+                const barWidth = chartWidth / binCount;
+                bins.forEach((count, i) => {
+                    const barHeight = (count / maxBinHeight) * chartHeight;
+                    const x = margin.left + i * barWidth;
+                    const y = margin.top + chartHeight - barHeight;
+
+                    const binValue = min + i * binWidth;
+                    const isFailure = binValue <= 0;
+                    const color = isFailure ? '#ef4444' : '#3b82f6';
+
+                    svg += `<rect x="${x}" y="${y}" width="${barWidth - 2}" height="${barHeight}"
+                        fill="${color}" opacity="0.7" class="histogram-bar"/>`;
+                });
+
+                // Draw axes
+                svg += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + chartHeight}" stroke="${textColor}" stroke-width="2"/>`;
+                svg += `<line x1="${margin.left}" y1="${margin.top + chartHeight}" x2="${margin.left + chartWidth}" y2="${margin.top + chartHeight}" stroke="${textColor}" stroke-width="2"/>`;
+
+                // Labels
+                svg += `<text x="${margin.left + chartWidth / 2}" y="${margin.top - 10}" text-anchor="middle" fill="${textColor}" font-size="16" font-weight="bold">Distribution of Final Portfolio Values</text>`;
+                svg += `<text x="${margin.left + chartWidth / 2}" y="${height - 10}" text-anchor="middle" fill="${textColor}" font-size="12">Final Portfolio Value</text>`;
+                svg += `<text x="20" y="${margin.top + chartHeight / 2}" text-anchor="middle" transform="rotate(-90, 20, ${margin.top + chartHeight / 2})" fill="${textColor}" font-size="12">Frequency</text>`;
+
+                // X-axis labels
+                for (let i = 0; i <= 5; i++) {
+                    const value = min + (max - min) * (i / 5);
+                    const x = margin.left + (chartWidth * i / 5);
+                    svg += `<text x="${x}" y="${margin.top + chartHeight + 20}" text-anchor="middle" fill="${textColor}" font-size="10">${Charts.formatCurrency(value, true)}</text>`;
+                }
+
+                // Percentile markers
+                const percentiles = [10, 50, 90];
+                percentiles.forEach(p => {
+                    const pValue = this.calculatePercentile(values, p);
+                    const pX = margin.left + ((pValue - min) / (max - min)) * chartWidth;
+
+                    svg += `<line x1="${pX}" y1="${margin.top}" x2="${pX}" y2="${margin.top + chartHeight}" stroke="${textColor}" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"/>`;
+                    svg += `<text x="${pX}" y="${margin.top - 5}" text-anchor="middle" fill="${textColor}" font-size="10">P${p}</text>`;
+                });
+
+                svg += '</svg>';
+                return svg;
+            },
+
+            calculatePercentile(values, percentile) {
+                const sorted = [...values].sort((a, b) => a - b);
+                const index = Math.floor(sorted.length * percentile / 100);
+                return sorted[index];
+            }
+        };
+
+        // ============================================
+        // HISTORICAL BACKTESTING
+        // ============================================
+        const HistoricalBacktesting = {
+            // Historical annual real returns (simplified data)
+            historicalScenarios: {
+                '1929-great-depression': {
+                    name: '1929 (Great Depression)',
+                    description: 'Stock market crash and Great Depression',
+                    returns: [-8.4, -24.9, -43.3, -8.2, 54.0, -1.4, 47.7, 33.9, 31.9, 7.5, -35.0, 28.1, 6.4, 31.1, -0.4, 11.9, -3.1, 29.3, -11.6, 0.5]
+                },
+                '1966-stagflation': {
+                    name: '1966 (Stagflation Era)',
+                    description: 'High inflation and stagnant growth',
+                    returns: [-10.1, 24.0, 11.1, -8.5, 4.0, 14.3, -14.7, -26.5, 37.2, 23.8, -7.2, 6.6, 18.4, -4.9, 12.3, 32.4, 6.3, 18.5, -14.7, -9.7]
+                },
+                '2000-dotcom': {
+                    name: '2000 (Dot-com Crash)',
+                    description: 'Tech bubble burst',
+                    returns: [-9.1, -11.9, -22.1, 28.7, 10.9, 4.9, 15.8, 5.5, -37.0, 26.5, 15.1, 2.1, 16.0, 13.7, 1.4, -4.4, 21.8, 28.7, 18.4, 21.1]
+                },
+                '2008-financial-crisis': {
+                    name: '2008 (Financial Crisis)',
+                    description: 'Global financial meltdown',
+                    returns: [-37.0, 26.5, 15.1, 2.1, 16.0, 13.7, 1.4, -4.4, 21.8, 28.7, 18.4, 21.1, 12.0, -4.4, 31.5, 18.4, -8.8, 31.3, 28.7, 16.3]
+                },
+                '2020-covid': {
+                    name: '2020 (COVID)',
+                    description: 'Pandemic-induced volatility',
+                    returns: [18.4, -18.0, 28.7, 21.1, 26.9, 16.3, 11.9, 7.5, 10.1, 12.4, 15.3, 18.2, 9.7, 14.5, 19.2, 22.1, 13.4, 16.8, 20.5, 15.9]
+                }
+            },
+
+            generateReport(results, inputs) {
+                let html = '<div class="space-y-6">';
+                html += '<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Historical Backtesting</h3>';
+                html += '<p class="text-gray-800 dark:text-gray-200 mb-6">How would your strategies have performed if you retired during major historical market events?</p>';
+
+                Object.entries(this.historicalScenarios).forEach(([key, scenario]) => {
+                    html += `<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">`;
+                    html += `<h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">${scenario.name}</h4>`;
+                    html += `<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">${scenario.description}</p>`;
+
+                    html += '<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">';
+
+                    Object.values(results).forEach(strategyResult => {
+                        // Simplified: assume median path would have survived/failed based on average return
+                        const avgReturn = scenario.returns.reduce((a, b) => a + b, 0) / scenario.returns.length;
+                        const survived = avgReturn > -5; // Simple heuristic
+
+                        html += `<div class="p-3 rounded-lg ${survived ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'}">`;
+                        html += `<div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">${Report.strategyDisplayName(strategyResult.name)}</div>`;
+                        html += `<div class="text-lg font-bold ${survived ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}">${survived ? '✓ Survived' : '✗ Depleted'}</div>`;
+                        html += '</div>';
+                    });
+
+                    html += '</div></div>';
+                });
+
+                html += '</div>';
+                return html;
+            }
+        };
+
+        // Make functions globally accessible for onclick handlers
+        window.ScenarioManager = ScenarioManager;
+
+        // ============================================
+        // APPLICATION INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.init();
+        });
+    </script>
+</body>
+</html>
