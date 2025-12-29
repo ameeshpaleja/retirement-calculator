@@ -2967,11 +2967,21 @@
                 const binCount = 25;  // Fewer bins = denser bars
                 const binWidth = (displayMax - displayMin) / binCount;
 
-                // Count values in each bin (clamp outliers to edge bins)
+                // Count values in each bin (exclude outliers beyond display range)
                 const bins = Array(binCount).fill(0);
+                let excludedHigh = 0;
+                let excludedLow = 0;
                 values.forEach(val => {
-                    const clampedVal = Math.max(displayMin, Math.min(displayMax, val));
-                    const binIndex = Math.min(Math.floor((clampedVal - displayMin) / binWidth), binCount - 1);
+                    // Skip values outside display range instead of clamping
+                    if (val > displayMax) {
+                        excludedHigh++;
+                        return;
+                    }
+                    if (val < displayMin) {
+                        excludedLow++;
+                        return;
+                    }
+                    const binIndex = Math.min(Math.floor((val - displayMin) / binWidth), binCount - 1);
                     bins[binIndex]++;
                 });
 
@@ -3040,6 +3050,17 @@
                         svg += `<text x="${clampedX}" y="${margin.top - 3}" text-anchor="middle" fill="${color}" font-size="9" font-weight="600">${label}</text>`;
                     }
                 });
+
+                // Add note about excluded outliers if any
+                if (excludedHigh > 0 || excludedLow > 0) {
+                    const totalExcluded = excludedHigh + excludedLow;
+                    const pctExcluded = ((totalExcluded / values.length) * 100).toFixed(1);
+                    let noteText = `${pctExcluded}% of outcomes outside display range`;
+                    if (excludedHigh > 0 && excludedLow === 0) {
+                        noteText = `${pctExcluded}% exceeded ${Charts.formatCurrency(displayMax, true)}`;
+                    }
+                    svg += `<text x="${width - margin.right}" y="${height - 8}" text-anchor="end" fill="${textColor}" font-size="9" opacity="0.6">${noteText}</text>`;
+                }
 
                 svg += '</svg>';
                 return svg;
