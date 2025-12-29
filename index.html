@@ -385,18 +385,6 @@
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
-                                        Current Age
-                                        <span class="tooltip">
-                                            <span class="info-icon">i</span>
-                                            <span class="tooltiptext">Your age today. This helps calculate years until retirement.</span>
-                                        </span>
-                                    </label>
-                                    <input type="number" id="current-age" value="40" min="18" max="100"
-                                        class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
                                         Retirement Age
                                         <span class="tooltip">
                                             <span class="info-icon">i</span>
@@ -864,7 +852,6 @@
 
         /**
          * @typedef {Object} Inputs
-         * @property {number} currentAge
          * @property {number} retirementAge
          * @property {number} planningAge
          * @property {number} startingPortfolio
@@ -1968,7 +1955,6 @@
                 if (document.getElementById('strategy-rmd').checked) selectedStrategies.push('rmd');
 
                 return {
-                    currentAge: parseInt(document.getElementById('current-age').value),
                     retirementAge: parseInt(document.getElementById('retirement-age').value),
                     planningAge: parseInt(document.getElementById('planning-age').value),
                     startingPortfolio: parseFormattedNumber(document.getElementById('starting-portfolio').value),
@@ -2016,11 +2002,6 @@
                 // Input validation
                 if (inputs.strategies.length === 0) {
                     this.showStatus('Please select at least one withdrawal strategy.', 'error');
-                    return;
-                }
-
-                if (inputs.retirementAge <= inputs.currentAge) {
-                    this.showStatus('Retirement age must be after current age.', 'error');
                     return;
                 }
 
@@ -2325,7 +2306,6 @@
                 html += '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
                 html += '<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Plan Setup</h4>';
                 html += '<div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">';
-                html += `<div><span class="font-medium">Current Age:</span> ${inputs.currentAge}</div>`;
                 html += `<div><span class="font-medium">Retirement Age:</span> ${inputs.retirementAge}</div>`;
                 html += `<div><span class="font-medium">Planning Horizon:</span> ${inputs.planningAge}</div>`;
                 html += `<div><span class="font-medium">Starting Portfolio:</span> ${Charts.formatCurrency(inputs.startingPortfolio)}</div>`;
@@ -2552,7 +2532,6 @@
             presets: {
                 conservative: {
                     name: "Conservative Retirement",
-                    currentAge: 45,
                     retirementAge: 67,
                     planningAge: 95,
                     startingPortfolio: 1000000,
@@ -2568,7 +2547,6 @@
                 },
                 moderate: {
                     name: "Moderate Retirement",
-                    currentAge: 45,
                     retirementAge: 65,
                     planningAge: 95,
                     startingPortfolio: 2000000,
@@ -2584,7 +2562,6 @@
                 },
                 aggressive: {
                     name: "Aggressive Growth",
-                    currentAge: 45,
                     retirementAge: 60,
                     planningAge: 95,
                     startingPortfolio: 3000000,
@@ -2600,7 +2577,6 @@
                 },
                 'early-retire': {
                     name: "Early Retirement",
-                    currentAge: 45,
                     retirementAge: 50,
                     planningAge: 95,
                     startingPortfolio: 5000000,
@@ -2621,7 +2597,6 @@
                 if (!preset) return;
 
                 // Populate form fields
-                document.getElementById('current-age').value = preset.currentAge;
                 document.getElementById('retirement-age').value = preset.retirementAge;
                 document.getElementById('planning-age').value = preset.planningAge;
                 document.getElementById('starting-portfolio').value = formatNumber(preset.startingPortfolio);
@@ -2717,7 +2692,6 @@
 
                 // Populate form
                 const inputs = scenario.inputs;
-                document.getElementById('current-age').value = inputs.currentAge;
                 document.getElementById('retirement-age').value = inputs.retirementAge;
                 document.getElementById('planning-age').value = inputs.planningAge;
                 document.getElementById('starting-portfolio').value = formatNumber(inputs.startingPortfolio);
