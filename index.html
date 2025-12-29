@@ -2495,73 +2495,329 @@
 
         // ============================================
         // KEY INSIGHTS GENERATOR
+        // Enhanced with actionable guidance and recommendations
         // ============================================
         const InsightsGenerator = {
+            /**
+             * Calculate what portfolio size would be needed to achieve target success rate
+             * Uses binary search to find the portfolio that achieves the target
+             */
+            estimateRequiredPortfolio(inputs, targetSuccessRate) {
+                const bestStrategy = 'constant-pct'; // Most resilient strategy
+                let low = inputs.startingPortfolio * 0.5;
+                let high = inputs.startingPortfolio * 5;
+
+                // Simple estimation: assume linear relationship between portfolio and success
+                // This is a rough approximation for guidance
+                const currentResult = Simulation.runStrategy(bestStrategy, inputs);
+                const currentSuccess = currentResult.successRate;
+
+                if (currentSuccess >= targetSuccessRate) {
+                    return inputs.startingPortfolio; // Already meeting target
+                }
+
+                // Estimate based on ratio needed
+                const successGap = targetSuccessRate - currentSuccess;
+                const multiplier = 1 + (successGap / 100) * 2.5; // Rough heuristic
+                return Math.round(inputs.startingPortfolio * multiplier);
+            },
+
+            /**
+             * Calculate what spending level would achieve target success rate
+             */
+            estimateSafeSpending(inputs, targetSuccessRate) {
+                // Run a quick simulation with reduced spending to estimate safe level
+                const testInputs = { ...inputs };
+                const currentWithdrawalRate = inputs.minSpending / inputs.startingPortfolio;
+
+                // If withdrawal rate is already low, spending is probably fine
+                if (currentWithdrawalRate <= 0.03) {
+                    return inputs.minSpending;
+                }
+
+                // Estimate safe spending based on classic safe withdrawal research
+                // Adjusted for retirement length and expected returns
+                const yearsInRetirement = inputs.planningAge - inputs.retirementAge;
+                let safeRate = 0.04; // Start with 4% rule
+
+                // Adjust for longer retirements
+                if (yearsInRetirement > 30) {
+                    safeRate = 0.035;
+                }
+                if (yearsInRetirement > 40) {
+                    safeRate = 0.03;
+                }
+
+                // Adjust for expected returns
+                if (inputs.expectedReturn < 4) {
+                    safeRate -= 0.005;
+                }
+                if (inputs.expectedReturn > 6) {
+                    safeRate += 0.005;
+                }
+
+                // Account for Social Security
+                const ssAtRetirement = inputs.retirementAge >= inputs.ssStartAge ? inputs.socialSecurity : 0;
+                const safePortfolioSpending = inputs.startingPortfolio * safeRate;
+
+                return Math.round(safePortfolioSpending + ssAtRetirement);
+            },
+
+            /**
+             * Estimate impact of delaying retirement
+             */
+            estimateDelayImpact(inputs, yearsDelay) {
+                // Each year of delay provides:
+                // 1. More time for portfolio to grow
+                // 2. Fewer years to fund
+                // 3. Higher Social Security (if applicable)
+
+                const currentYears = inputs.planningAge - inputs.retirementAge;
+                const newYears = inputs.planningAge - (inputs.retirementAge + yearsDelay);
+                const yearsReduction = ((currentYears - newYears) / currentYears) * 100;
+
+                // Estimate portfolio growth during delay
+                const growthMultiplier = Math.pow(1 + inputs.expectedReturn / 100, yearsDelay);
+                const projectedPortfolio = inputs.startingPortfolio * growthMultiplier;
+
+                return {
+                    yearsReduction,
+                    projectedPortfolio,
+                    additionalGrowth: projectedPortfolio - inputs.startingPortfolio
+                };
+            },
+
             generate(results, inputs) {
                 const strategies = Object.values(results);
                 const insights = [];
+                const recommendations = [];
 
-                // Check if any strategy meets target
+                // ============================================
+                // CORE SUCCESS ANALYSIS
+                // ============================================
+                const bestSuccess = strategies.reduce((max, s) => s.successRate > max.successRate ? s : max);
+                const worstSuccess = strategies.reduce((min, s) => s.successRate < min.successRate ? s : min);
                 const meetsTarget = strategies.filter(s => s.successRate >= inputs.targetSuccessRate);
+
+                // Primary success message
                 if (meetsTarget.length === 0) {
                     insights.push({
                         type: 'warning',
                         icon: '⚠️',
-                        text: `None of the strategies meet your target success rate of ${inputs.targetSuccessRate}%. Consider adjusting your assumptions or delaying retirement.`
+                        text: `None of the strategies meet your ${inputs.targetSuccessRate}% target success rate. The best performing strategy (${Report.strategyDisplayName(bestSuccess.name)}) achieves ${bestSuccess.successRate.toFixed(1)}%. See recommendations below.`,
+                        priority: 1
+                    });
+                } else if (meetsTarget.length === strategies.length) {
+                    insights.push({
+                        type: 'success',
+                        icon: '✅',
+                        text: `All ${meetsTarget.length} strategies meet your ${inputs.targetSuccessRate}% target! Your plan appears well-funded with a comfortable margin of safety.`,
+                        priority: 1
                     });
                 } else {
                     insights.push({
                         type: 'success',
                         icon: '✅',
-                        text: `${meetsTarget.length} ${meetsTarget.length === 1 ? 'strategy meets' : 'strategies meet'} your target success rate of ${inputs.targetSuccessRate}%.`
+                        text: `${meetsTarget.length} of ${strategies.length} strategies meet your ${inputs.targetSuccessRate}% target. ${Report.strategyDisplayName(bestSuccess.name)} performs best at ${bestSuccess.successRate.toFixed(1)}%.`,
+                        priority: 1
                     });
                 }
 
-                // Find best strategies
-                const bestSuccess = strategies.reduce((max, s) => s.successRate > max.successRate ? s : max);
-                const bestWealth = strategies.reduce((max, s) => s.medianFinal > max.medianFinal ? s : max);
+                // ============================================
+                // WITHDRAWAL RATE ANALYSIS
+                // ============================================
+                const initialWithdrawalRate = (inputs.minSpending / inputs.startingPortfolio) * 100;
+                const yearsInRetirement = inputs.planningAge - inputs.retirementAge;
 
-                insights.push({
-                    type: 'info',
-                    icon: '🏆',
-                    text: `${Report.strategyDisplayName(bestSuccess.name)} has the highest success rate at ${bestSuccess.successRate.toFixed(1)}%.`
-                });
+                // Determine safe withdrawal rate based on retirement length
+                let safeWRBenchmark = 4.0;
+                let safeWRLabel = "4% rule";
+                if (yearsInRetirement > 40) {
+                    safeWRBenchmark = 3.0;
+                    safeWRLabel = "3% (40+ year retirement)";
+                } else if (yearsInRetirement > 30) {
+                    safeWRBenchmark = 3.5;
+                    safeWRLabel = "3.5% (30+ year retirement)";
+                }
 
-                if (bestWealth.name !== bestSuccess.name) {
+                if (initialWithdrawalRate > safeWRBenchmark * 1.5) {
                     insights.push({
-                        type: 'info',
-                        icon: '💰',
-                        text: `${Report.strategyDisplayName(bestWealth.name)} leaves the most wealth (median: ${Charts.formatCurrency(bestWealth.medianFinal)}).`
+                        type: 'warning',
+                        icon: '📉',
+                        text: `Your initial withdrawal rate of ${initialWithdrawalRate.toFixed(1)}% is significantly higher than the ${safeWRLabel} benchmark. This is the primary risk factor in your plan.`,
+                        priority: 2
                     });
-                }
-
-                // Check for high volatility
-                if (inputs.volatility >= 15) {
+                } else if (initialWithdrawalRate > safeWRBenchmark) {
                     insights.push({
                         type: 'warning',
                         icon: '📊',
-                        text: `Your volatility assumption (${inputs.volatility}%) is high. This increases outcome variability.`
+                        text: `Your initial withdrawal rate of ${initialWithdrawalRate.toFixed(1)}% exceeds the ${safeWRLabel} benchmark. Consider strategies that adapt spending to market conditions.`,
+                        priority: 2
                     });
-                }
-
-                // Check portfolio size
-                if (inputs.startingPortfolio < 500000) {
+                } else if (initialWithdrawalRate < safeWRBenchmark * 0.75) {
                     insights.push({
-                        type: 'warning',
-                        icon: '💵',
-                        text: `Your starting portfolio is relatively small. Consider maximizing savings before retirement.`
+                        type: 'success',
+                        icon: '🛡️',
+                        text: `Your withdrawal rate of ${initialWithdrawalRate.toFixed(1)}% is conservative, well below the ${safeWRLabel} benchmark. You have a strong margin of safety.`,
+                        priority: 2
                     });
                 }
 
-                // Check long retirement
-                const yearsInRetirement = inputs.planningAge - inputs.retirementAge;
+                // ============================================
+                // SOCIAL SECURITY ANALYSIS
+                // ============================================
+                if (inputs.socialSecurity > 0) {
+                    const yearsUntilSS = Math.max(0, inputs.ssStartAge - inputs.retirementAge);
+                    const ssPercentOfSpending = (inputs.socialSecurity / inputs.minSpending) * 100;
+
+                    if (yearsUntilSS > 0) {
+                        insights.push({
+                            type: 'info',
+                            icon: '📅',
+                            text: `Social Security begins ${yearsUntilSS} years after retirement (age ${inputs.ssStartAge}). During this gap, your portfolio must cover 100% of spending. Once SS starts, it covers ${ssPercentOfSpending.toFixed(0)}% of your minimum spending.`,
+                            priority: 3
+                        });
+
+                        // Calculate the portfolio draw during SS gap
+                        const inflationMultiplier = 1 + inputs.inflationRate / 100;
+                        let totalGapSpending = 0;
+                        for (let i = 0; i < yearsUntilSS; i++) {
+                            totalGapSpending += inputs.minSpending * Math.pow(inflationMultiplier, i);
+                        }
+
+                        if (totalGapSpending > inputs.startingPortfolio * 0.3) {
+                            insights.push({
+                                type: 'warning',
+                                icon: '⏳',
+                                text: `Before Social Security starts, you'll need approximately ${Charts.formatCurrency(totalGapSpending)} from your portfolio (${((totalGapSpending / inputs.startingPortfolio) * 100).toFixed(0)}% of starting value). This early drawdown period is critical.`,
+                                priority: 3
+                            });
+                        }
+                    } else {
+                        insights.push({
+                            type: 'success',
+                            icon: '✓',
+                            text: `Social Security provides ${Charts.formatCurrency(inputs.socialSecurity)}/year (${ssPercentOfSpending.toFixed(0)}% of minimum spending) from day one, significantly reducing portfolio strain.`,
+                            priority: 3
+                        });
+                    }
+                }
+
+                // ============================================
+                // LONGEVITY & SEQUENCE RISK
+                // ============================================
                 if (yearsInRetirement > 35) {
                     insights.push({
                         type: 'info',
                         icon: '⏰',
-                        text: `You're planning for a ${yearsInRetirement}-year retirement. Longevity risk is significant.`
+                        text: `A ${yearsInRetirement}-year retirement requires careful planning. The first 10 years are critical—a severe market downturn early in retirement (sequence-of-returns risk) has the greatest impact on long-term success.`,
+                        priority: 4
                     });
                 }
+
+                // ============================================
+                // STRATEGY-SPECIFIC INSIGHTS
+                // ============================================
+                // Analyze spread between strategies
+                const successSpread = bestSuccess.successRate - worstSuccess.successRate;
+                if (successSpread > 20) {
+                    insights.push({
+                        type: 'info',
+                        icon: '🔄',
+                        text: `Strategy choice matters significantly for your plan: success rates range from ${worstSuccess.successRate.toFixed(1)}% to ${bestSuccess.successRate.toFixed(1)}% (${successSpread.toFixed(0)} point spread). Flexible strategies like ${Report.strategyDisplayName(bestSuccess.name)} adapt better to your situation.`,
+                        priority: 4
+                    });
+                }
+
+                // Check if constant-pct is available and how it compares
+                const constantPct = strategies.find(s => s.name === 'constant-pct');
+                const constantReal = strategies.find(s => s.name === 'constant-real');
+                if (constantPct && constantReal && constantPct.successRate > constantReal.successRate + 10) {
+                    insights.push({
+                        type: 'info',
+                        icon: '💡',
+                        text: `Constant % of Portfolio outperforms the traditional 4% Rule by ${(constantPct.successRate - constantReal.successRate).toFixed(0)} points because it automatically reduces spending during downturns. Trade-off: income varies with market performance.`,
+                        priority: 5
+                    });
+                }
+
+                // ============================================
+                // ACTIONABLE RECOMMENDATIONS
+                // ============================================
+                if (bestSuccess.successRate < inputs.targetSuccessRate) {
+                    const gap = inputs.targetSuccessRate - bestSuccess.successRate;
+
+                    // Recommendation 1: Reduce spending
+                    const safeSpending = this.estimateSafeSpending(inputs, inputs.targetSuccessRate);
+                    if (safeSpending < inputs.minSpending) {
+                        const reduction = inputs.minSpending - safeSpending;
+                        const reductionPct = (reduction / inputs.minSpending) * 100;
+                        recommendations.push({
+                            icon: '📉',
+                            title: 'Reduce Annual Spending',
+                            text: `Reducing spending to ${Charts.formatCurrency(safeSpending)}/year (-${reductionPct.toFixed(0)}%) would significantly improve success rates. This brings your withdrawal rate closer to sustainable levels.`,
+                            impact: 'High Impact'
+                        });
+                    }
+
+                    // Recommendation 2: Increase portfolio
+                    const requiredPortfolio = this.estimateRequiredPortfolio(inputs, inputs.targetSuccessRate);
+                    if (requiredPortfolio > inputs.startingPortfolio) {
+                        const additional = requiredPortfolio - inputs.startingPortfolio;
+                        recommendations.push({
+                            icon: '💰',
+                            title: 'Increase Starting Portfolio',
+                            text: `A portfolio of approximately ${Charts.formatCurrency(requiredPortfolio)} (+${Charts.formatCurrency(additional)}) would better support your spending goals at your target success rate.`,
+                            impact: 'High Impact'
+                        });
+                    }
+
+                    // Recommendation 3: Delay retirement
+                    if (inputs.retirementAge < 70) {
+                        const delayYears = Math.min(5, 70 - inputs.retirementAge);
+                        const delayImpact = this.estimateDelayImpact(inputs, delayYears);
+                        recommendations.push({
+                            icon: '📅',
+                            title: `Delay Retirement by ${delayYears} Years`,
+                            text: `Working until age ${inputs.retirementAge + delayYears} would: (1) allow your portfolio to grow to ~${Charts.formatCurrency(delayImpact.projectedPortfolio)}, (2) reduce retirement years by ${delayImpact.yearsReduction.toFixed(0)}%, and (3) potentially increase Social Security benefits.`,
+                            impact: 'High Impact'
+                        });
+                    }
+
+                    // Recommendation 4: Increase expected return (with caveats)
+                    if (inputs.expectedReturn < 6 && recommendations.length < 4) {
+                        recommendations.push({
+                            icon: '📈',
+                            title: 'Review Asset Allocation',
+                            text: `Your expected return of ${inputs.expectedReturn}% is conservative. A more equity-heavy allocation could increase returns, but also increases volatility and sequence-of-returns risk. Consider your risk tolerance carefully.`,
+                            impact: 'Medium Impact'
+                        });
+                    }
+                } else {
+                    // Already meeting target - provide optimization recommendations
+                    if (bestSuccess.successRate > inputs.targetSuccessRate + 15) {
+                        recommendations.push({
+                            icon: '🎯',
+                            title: 'Consider Higher Spending',
+                            text: `Your ${bestSuccess.successRate.toFixed(1)}% success rate exceeds your ${inputs.targetSuccessRate}% target by a wide margin. You may be able to spend more or retire earlier while still meeting your goals.`,
+                            impact: 'Opportunity'
+                        });
+                    }
+
+                    // Wealth preservation insight
+                    const bestWealth = strategies.reduce((max, s) => s.medianFinal > max.medianFinal ? s : max);
+                    if (bestWealth.medianFinal > inputs.startingPortfolio * 0.5) {
+                        recommendations.push({
+                            icon: '🏦',
+                            title: 'Legacy Planning',
+                            text: `${Report.strategyDisplayName(bestWealth.name)} has a median final balance of ${Charts.formatCurrency(bestWealth.medianFinal)}. If leaving wealth to heirs is important, this strategy preserves the most capital.`,
+                            impact: 'Consideration'
+                        });
+                    }
+                }
+
+                // Store recommendations for display
+                this._recommendations = recommendations;
 
                 return insights;
             },
@@ -2574,7 +2830,10 @@
                 html += '</h3>';
                 html += '<div class="space-y-3">';
 
-                insights.forEach(insight => {
+                // Sort insights by priority if available
+                const sortedInsights = [...insights].sort((a, b) => (a.priority || 99) - (b.priority || 99));
+
+                sortedInsights.forEach(insight => {
                     const bgColor = {
                         'warning': 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-800',
                         'success': 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-800',
@@ -2597,7 +2856,41 @@
                     </div>`;
                 });
 
-                html += '</div></div>';
+                html += '</div>';
+
+                // Add recommendations section if there are any
+                if (this._recommendations && this._recommendations.length > 0) {
+                    html += '<div class="mt-6 pt-6 border-t border-blue-200 dark:border-blue-800">';
+                    html += '<h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">';
+                    html += '<svg class="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>';
+                    html += 'Actionable Recommendations';
+                    html += '</h4>';
+                    html += '<div class="grid gap-3">';
+
+                    this._recommendations.forEach(rec => {
+                        const impactColor = rec.impact === 'High Impact'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                            : rec.impact === 'Medium Impact'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+                            : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
+
+                        html += `<div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex items-center">
+                                    <span class="text-xl mr-2">${rec.icon}</span>
+                                    <span class="font-medium text-gray-900 dark:text-gray-100">${rec.title}</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 rounded-full ${impactColor}">${rec.impact}</span>
+                            </div>
+                            <p class="text-sm text-gray-700 dark:text-gray-300 ml-8">${rec.text}</p>
+                        </div>`;
+                    });
+
+                    html += '</div>';
+                    html += '</div>';
+                }
+
+                html += '</div>';
                 return html;
             }
         };
