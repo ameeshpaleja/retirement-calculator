@@ -1998,8 +1998,11 @@
                 const p90Withdrawals = this.percentile(totalWithdrawals, 90);
                 const p95Withdrawals = this.percentile(totalWithdrawals, 95);
 
-                // Generate median path for visualization
-                const medianPath = strategy.call(this, inputs, true).years;
+                // Find the actual median path from Monte Carlo simulations
+                // Sort paths by final balance and pick the one at the median position
+                const sortedByFinal = [...paths].sort((a, b) => a.finalBalance - b.finalBalance);
+                const medianIndex = Math.floor(sortedByFinal.length / 2);
+                const medianPath = sortedByFinal[medianIndex].years;
 
                 // Calculate percentile paths for probability cone
                 const numYears = medianPath.length;
