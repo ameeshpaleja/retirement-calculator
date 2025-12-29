@@ -148,9 +148,21 @@ const Simulation = {
     strategyConstantReal(inputs, deterministic = false) {
         const years = inputs.planningAge - inputs.retirementAge;
         const initialRate = 4.5;
-        const calculatedWithdrawal = inputs.startingPortfolio * (initialRate / 100);
-        const initialWithdrawal = Math.max(calculatedWithdrawal, inputs.minSpending || 0);
         const inflationMultiplier = 1 + inputs.inflationRate / 100;
+
+        // Use startingWithdrawal if specified, otherwise use 4.5% rule
+        let baseWithdrawal;
+        if (inputs.startingWithdrawal && inputs.startingWithdrawal > 0) {
+            baseWithdrawal = inputs.startingWithdrawal;
+        } else {
+            baseWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+        }
+
+        // Apply min/max spending constraints
+        let initialWithdrawal = Math.max(baseWithdrawal, inputs.minSpending || 0);
+        if (inputs.maxSpending && inputs.maxSpending > 0) {
+            initialWithdrawal = Math.min(initialWithdrawal, inputs.maxSpending);
+        }
 
         let portfolio = inputs.startingPortfolio;
         let withdrawal = initialWithdrawal;
@@ -158,9 +170,17 @@ const Simulation = {
         let ruined = false;
         let ruinAge = null;
 
+        const baseMaxSpending = inputs.maxSpending || 0;
+
         for (let i = 0; i < years; i++) {
             const age = inputs.retirementAge + i;
             const portfolioStart = portfolio;
+
+            // Apply max spending cap (inflation-adjusted) if specified
+            if (baseMaxSpending > 0) {
+                const inflationAdjustedMaxSpending = baseMaxSpending * Math.pow(inflationMultiplier, i);
+                withdrawal = Math.min(withdrawal, inflationAdjustedMaxSpending);
+            }
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
@@ -216,6 +236,8 @@ const Simulation = {
         const withdrawalRate = 4.0;
         const inflationMultiplier = 1 + inputs.inflationRate / 100;
         const baseMinSpending = inputs.minSpending || 0;
+        const baseMaxSpending = inputs.maxSpending || 0;
+        const baseStartingWithdrawal = inputs.startingWithdrawal || 0;
 
         let portfolio = inputs.startingPortfolio;
         const yearResults = [];
@@ -226,6 +248,8 @@ const Simulation = {
             const age = inputs.retirementAge + i;
             const portfolioStart = portfolio;
             const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+            const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
+            const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
@@ -233,7 +257,11 @@ const Simulation = {
             const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
             const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
             const percentWithdrawal = portfolio * (withdrawalRate / 100);
-            const targetWithdrawal = Math.max(percentWithdrawal, inflationAdjustedMinSpending);
+            let targetWithdrawal = Math.max(percentWithdrawal, inflationAdjustedMinSpending);
+            if (inflationAdjustedStartingWithdrawal > 0) {
+                targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+            }
+            targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
             const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
             portfolio -= netWithdrawal;
@@ -279,6 +307,8 @@ const Simulation = {
         const years = inputs.planningAge - inputs.retirementAge;
         const inflationMultiplier = 1 + inputs.inflationRate / 100;
         const baseMinSpending = inputs.minSpending || 0;
+        const baseMaxSpending = inputs.maxSpending || 0;
+        const baseStartingWithdrawal = inputs.startingWithdrawal || 0;
 
         let portfolio = inputs.startingPortfolio;
         const yearResults = [];
@@ -289,6 +319,8 @@ const Simulation = {
             const age = inputs.retirementAge + i;
             const portfolioStart = portfolio;
             const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+            const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
+            const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
@@ -299,7 +331,11 @@ const Simulation = {
             const yearsRemaining = inputs.planningAge - age;
             const vpwPct = this.vpwPercentage(yearsRemaining, 60);
             const vpwWithdrawal = portfolio * (vpwPct / 100);
-            const targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
+            let targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
+            if (inflationAdjustedStartingWithdrawal > 0) {
+                targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+            }
+            targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
             const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
             portfolio -= netWithdrawal;
@@ -350,10 +386,24 @@ const Simulation = {
         const adjustmentFactor = 0.10;
         const inflationMultiplier = 1 + inputs.inflationRate / 100;
         const baseMinSpending = inputs.minSpending || 0;
+        const baseMaxSpending = inputs.maxSpending || 0;
 
         let portfolio = inputs.startingPortfolio;
-        const calculatedWithdrawal = inputs.startingPortfolio * (initialRate / 100);
-        let withdrawal = Math.max(calculatedWithdrawal, baseMinSpending);
+
+        // Use startingWithdrawal if specified, otherwise use 5% rule
+        let baseWithdrawal;
+        if (inputs.startingWithdrawal && inputs.startingWithdrawal > 0) {
+            baseWithdrawal = inputs.startingWithdrawal;
+        } else {
+            baseWithdrawal = inputs.startingPortfolio * (initialRate / 100);
+        }
+
+        // Apply min/max spending constraints to initial withdrawal
+        let withdrawal = Math.max(baseWithdrawal, baseMinSpending);
+        if (baseMaxSpending > 0) {
+            withdrawal = Math.min(withdrawal, baseMaxSpending);
+        }
+
         const yearResults = [];
         let ruined = false;
         let ruinAge = null;
@@ -362,6 +412,7 @@ const Simulation = {
             const age = inputs.retirementAge + i;
             const portfolioStart = portfolio;
             const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+            const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
@@ -377,7 +428,9 @@ const Simulation = {
                 withdrawal *= (1 + adjustmentFactor);
             }
 
+            // Apply min/max spending constraints
             withdrawal = Math.max(withdrawal, inflationAdjustedMinSpending);
+            withdrawal = Math.min(withdrawal, inflationAdjustedMaxSpending);
 
             const netWithdrawal = Math.max(0, withdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -427,6 +480,8 @@ const Simulation = {
         const years = inputs.planningAge - inputs.retirementAge;
         const inflationMultiplier = 1 + inputs.inflationRate / 100;
         const baseMinSpending = inputs.minSpending || 0;
+        const baseMaxSpending = inputs.maxSpending || 0;
+        const baseStartingWithdrawal = inputs.startingWithdrawal || 0;
 
         let portfolio = inputs.startingPortfolio;
         const yearResults = [];
@@ -437,6 +492,8 @@ const Simulation = {
             const age = inputs.retirementAge + i;
             const portfolioStart = portfolio;
             const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
+            const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
+            const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
@@ -446,7 +503,11 @@ const Simulation = {
 
             const lifeExp = this.lifeExpectancy(age);
             const rmdWithdrawal = portfolio / lifeExp;
-            const targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
+            let targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
+            if (inflationAdjustedStartingWithdrawal > 0) {
+                targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+            }
+            targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
             const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
             portfolio -= netWithdrawal;
@@ -1327,6 +1388,389 @@ describe('Performance Under Load', () => {
         const elapsed = Date.now() - start;
         console.log(`    (Completed in ${elapsed}ms)`);
         expect(elapsed).toBeLessThan(5000);
+    });
+});
+
+// ============================================
+// TEST GROUP 18: Starting Withdrawal Input Tests
+// ============================================
+describe('Starting Withdrawal Input - All Strategies', () => {
+    const baseInputs = {
+        retirementAge: 65,
+        planningAge: 90,
+        startingPortfolio: 2000000,
+        expectedReturn: 5.0,
+        volatility: 0, // Deterministic for testing
+        inflationRate: 2.5,
+        monteCarloRuns: 100,
+        minSpending: 50000,
+        maxSpending: 0,
+        startingWithdrawal: 80000, // User-specified withdrawal
+        oneTimeExpense: 0,
+        socialSecurity: 0,
+        ssStartAge: 67
+    };
+
+    test('Constant Real uses startingWithdrawal instead of 4.5% rule', () => {
+        const result = Simulation.strategyConstantReal(baseInputs, true);
+        // Should use $80k instead of 4.5% of $2M = $90k
+        expect(result.years[0].withdrawal).toBeCloseTo(80000, 0);
+    });
+
+    test('Guardrails uses startingWithdrawal instead of 5% rule', () => {
+        const result = Simulation.strategyGuardrails(baseInputs, true);
+        // Should use $80k instead of 5% of $2M = $100k
+        expect(result.years[0].withdrawal).toBeCloseTo(80000, 0);
+    });
+
+    test('startingWithdrawal = 0 uses strategy defaults', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 0 };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // Should use 4.5% of $2M = $90k
+        expect(result.years[0].withdrawal).toBeCloseTo(90000, 0);
+    });
+
+    test('startingWithdrawal is inflation-adjusted in subsequent years', () => {
+        const result = Simulation.strategyConstantReal(baseInputs, true);
+        const inflationMultiplier = 1.025; // 2.5% inflation
+        // Year 2 should be $80k * 1.025
+        expect(result.years[1].withdrawal).toBeCloseTo(80000 * inflationMultiplier, 0);
+    });
+
+    test('startingWithdrawal overrides even when below minSpending for Constant Real', () => {
+        // startingWithdrawal < minSpending - min should take precedence
+        const inputs = { ...baseInputs, startingWithdrawal: 40000, minSpending: 60000 };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // Should use minSpending $60k since startingWithdrawal $40k is less
+        expect(result.years[0].withdrawal).toBeCloseTo(60000, 0);
+    });
+
+    test('VPW uses startingWithdrawal as floor', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 100000 };
+        const result = Simulation.strategyVPW(inputs, true);
+        // VPW calculation might be lower, but startingWithdrawal should set floor
+        expect(result.years[0].withdrawal).toBeGreaterThanOrEqual(100000);
+    });
+
+    test('RMD uses startingWithdrawal as floor', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 100000 };
+        const result = Simulation.strategyRMD(inputs, true);
+        expect(result.years[0].withdrawal).toBeGreaterThanOrEqual(100000);
+    });
+});
+
+// ============================================
+// TEST GROUP 19: Maximum Spending Cap Tests
+// ============================================
+describe('Maximum Spending Cap - All Strategies', () => {
+    const baseInputs = {
+        retirementAge: 65,
+        planningAge: 90,
+        startingPortfolio: 5000000,
+        expectedReturn: 5.0,
+        volatility: 0,
+        inflationRate: 2.5,
+        monteCarloRuns: 100,
+        minSpending: 50000,
+        maxSpending: 150000, // Cap at $150k
+        startingWithdrawal: 0,
+        oneTimeExpense: 0,
+        socialSecurity: 0,
+        ssStartAge: 67
+    };
+
+    test('Constant Real respects maxSpending cap', () => {
+        // 4.5% of $5M = $225k, should be capped to $150k
+        const result = Simulation.strategyConstantReal(baseInputs, true);
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(150000);
+        expect(result.years[0].withdrawal).toBeCloseTo(150000, 0);
+    });
+
+    test('Constant Percent respects maxSpending cap', () => {
+        // 4% of $5M = $200k, should be capped to $150k
+        const result = Simulation.strategyConstantPercent(baseInputs, true);
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(150000);
+    });
+
+    test('Guardrails respects maxSpending cap', () => {
+        // 5% of $5M = $250k, should be capped to $150k
+        const result = Simulation.strategyGuardrails(baseInputs, true);
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(150000);
+    });
+
+    test('VPW respects maxSpending cap', () => {
+        const result = Simulation.strategyVPW(baseInputs, true);
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(150000);
+    });
+
+    test('RMD respects maxSpending cap', () => {
+        const result = Simulation.strategyRMD(baseInputs, true);
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(150000);
+    });
+
+    test('maxSpending is inflation-adjusted over time', () => {
+        const result = Simulation.strategyConstantReal(baseInputs, true);
+        const year10Inflation = Math.pow(1.025, 10); // 2.5% for 10 years
+        const maxYear10 = 150000 * year10Inflation;
+        // Year 10 withdrawal should not exceed inflation-adjusted max
+        expect(result.years[10].withdrawal).toBeLessThanOrEqual(maxYear10 * 1.01); // 1% tolerance
+    });
+
+    test('maxSpending = 0 means no cap', () => {
+        const inputs = { ...baseInputs, maxSpending: 0 };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // 4.5% of $5M = $225k, should NOT be capped
+        expect(result.years[0].withdrawal).toBeCloseTo(225000, 0);
+    });
+
+    test('maxSpending < minSpending edge case', () => {
+        // This is a user error but shouldn't crash
+        const inputs = { ...baseInputs, minSpending: 200000, maxSpending: 100000 };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // maxSpending should win (cap applied after min floor)
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(100000);
+    });
+});
+
+// ============================================
+// TEST GROUP 20: Combined Min/Max/Starting Withdrawal Tests
+// ============================================
+describe('Combined Spending Constraints', () => {
+    const baseInputs = {
+        retirementAge: 65,
+        planningAge: 90,
+        startingPortfolio: 3000000,
+        expectedReturn: 5.0,
+        volatility: 0,
+        inflationRate: 3.0,
+        monteCarloRuns: 100,
+        minSpending: 80000,
+        maxSpending: 200000,
+        startingWithdrawal: 120000,
+        oneTimeExpense: 0,
+        socialSecurity: 0,
+        ssStartAge: 67
+    };
+
+    test('All three constraints work together', () => {
+        const result = Simulation.strategyConstantReal(baseInputs, true);
+        // startingWithdrawal $120k is between min $80k and max $200k
+        expect(result.years[0].withdrawal).toBeCloseTo(120000, 0);
+    });
+
+    test('minSpending wins when startingWithdrawal is below', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 50000 };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        expect(result.years[0].withdrawal).toBeCloseTo(80000, 0);
+    });
+
+    test('maxSpending wins when startingWithdrawal is above', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 250000 };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        expect(result.years[0].withdrawal).toBeCloseTo(200000, 0);
+    });
+
+    test('Withdrawal stays within bounds across all years', () => {
+        const result = Simulation.strategyConstantReal(baseInputs, true);
+        const inflationRate = 1.03;
+
+        for (let i = 0; i < result.years.length; i++) {
+            const minAdjusted = 80000 * Math.pow(inflationRate, i);
+            const maxAdjusted = 200000 * Math.pow(inflationRate, i);
+            expect(result.years[i].withdrawal).toBeGreaterThanOrEqual(minAdjusted * 0.99);
+            expect(result.years[i].withdrawal).toBeLessThanOrEqual(maxAdjusted * 1.01);
+        }
+    });
+});
+
+// ============================================
+// TEST GROUP 21: Extreme Edge Cases - Breaking Attempts
+// ============================================
+describe('Extreme Edge Cases - Breaking Attempts', () => {
+    test('Negative startingWithdrawal treated as 0', () => {
+        const inputs = {
+            ...standardInputs,
+            startingWithdrawal: -50000,
+            volatility: 0
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // Should use default 4.5% rule, not negative value
+        expect(result.years[0].withdrawal).toBeGreaterThan(0);
+    });
+
+    test('Extremely high startingWithdrawal (> portfolio)', () => {
+        const inputs = {
+            retirementAge: 65,
+            planningAge: 90,
+            startingPortfolio: 1000000,
+            startingWithdrawal: 5000000, // 5x portfolio
+            expectedReturn: 5.0,
+            volatility: 0,
+            inflationRate: 2.5,
+            minSpending: 0,
+            maxSpending: 0,
+            oneTimeExpense: 0,
+            socialSecurity: 0,
+            ssStartAge: 67
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // Should deplete immediately but not crash
+        expect(result.ruined).toBe(true);
+        expect(result.years[0].portfolioEnd).toBe(0);
+    });
+
+    test('maxSpending = 1 (minimum possible spending)', () => {
+        const inputs = {
+            ...standardInputs,
+            maxSpending: 1,
+            minSpending: 0,
+            volatility: 0
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(1);
+    });
+
+    test('All spending constraints = 0', () => {
+        const inputs = {
+            ...standardInputs,
+            minSpending: 0,
+            maxSpending: 0,
+            startingWithdrawal: 0,
+            volatility: 0
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // Should use 4.5% default
+        expect(result.years[0].withdrawal).toBeCloseTo(standardInputs.startingPortfolio * 0.045, 0);
+    });
+
+    test('Very small differences between min and max', () => {
+        const inputs = {
+            ...standardInputs,
+            minSpending: 100000,
+            maxSpending: 100001,
+            startingWithdrawal: 100000,
+            volatility: 0
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        expect(result.years[0].withdrawal).toBeGreaterThanOrEqual(100000);
+        expect(result.years[0].withdrawal).toBeLessThanOrEqual(100001);
+    });
+
+    test('Infinity-like large numbers', () => {
+        const inputs = {
+            ...standardInputs,
+            startingPortfolio: 1e15, // 1 quadrillion
+            startingWithdrawal: 1e12, // 1 trillion
+            volatility: 0
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        expect(result.years[0].withdrawal).toBeFinite();
+        expect(result.finalBalance).toBeFinite();
+    });
+
+    test('Floating point precision with small values', () => {
+        const inputs = {
+            retirementAge: 65,
+            planningAge: 66,
+            startingPortfolio: 0.01, // 1 cent
+            startingWithdrawal: 0.001,
+            expectedReturn: 5.0,
+            volatility: 0,
+            inflationRate: 2.5,
+            minSpending: 0,
+            maxSpending: 0,
+            oneTimeExpense: 0,
+            socialSecurity: 0,
+            ssStartAge: 67
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        expect(result.years).toHaveLength(1);
+        expect(result.finalBalance).toBeFinite();
+    });
+
+    test('100% withdrawal rate with maxSpending cap saves portfolio', () => {
+        const inputs = {
+            retirementAge: 65,
+            planningAge: 90,
+            startingPortfolio: 1000000,
+            startingWithdrawal: 1000000, // 100% withdrawal
+            maxSpending: 50000, // But capped at $50k
+            expectedReturn: 5.0,
+            volatility: 0,
+            inflationRate: 0,
+            minSpending: 0,
+            oneTimeExpense: 0,
+            socialSecurity: 0,
+            ssStartAge: 67
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // maxSpending should prevent ruin
+        expect(result.years[0].withdrawal).toBe(50000);
+        expect(result.ruined).toBe(false);
+    });
+});
+
+// ============================================
+// TEST GROUP 22: Social Security Interaction with New Inputs
+// ============================================
+describe('Social Security with New Spending Inputs', () => {
+    test('SS reduces net withdrawal but respects startingWithdrawal target', () => {
+        const inputs = {
+            retirementAge: 67,
+            planningAge: 90,
+            startingPortfolio: 2000000,
+            startingWithdrawal: 100000,
+            expectedReturn: 5.0,
+            volatility: 0,
+            inflationRate: 0,
+            minSpending: 0,
+            maxSpending: 0,
+            oneTimeExpense: 0,
+            socialSecurity: 30000,
+            ssStartAge: 67 // SS starts immediately
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // Net withdrawal = $100k - $30k SS = $70k from portfolio
+        expect(result.years[0].withdrawal).toBeCloseTo(70000, 0);
+    });
+
+    test('SS > startingWithdrawal results in $0 net withdrawal', () => {
+        const inputs = {
+            retirementAge: 67,
+            planningAge: 90,
+            startingPortfolio: 2000000,
+            startingWithdrawal: 50000,
+            expectedReturn: 5.0,
+            volatility: 0,
+            inflationRate: 0,
+            minSpending: 0,
+            maxSpending: 0,
+            oneTimeExpense: 0,
+            socialSecurity: 80000, // SS > startingWithdrawal
+            ssStartAge: 67
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        expect(result.years[0].withdrawal).toBe(0);
+    });
+
+    test('maxSpending applies before SS deduction', () => {
+        const inputs = {
+            retirementAge: 67,
+            planningAge: 90,
+            startingPortfolio: 5000000,
+            startingWithdrawal: 0,
+            expectedReturn: 5.0,
+            volatility: 0,
+            inflationRate: 0,
+            minSpending: 0,
+            maxSpending: 100000, // Cap total spending at $100k
+            oneTimeExpense: 0,
+            socialSecurity: 30000,
+            ssStartAge: 67
+        };
+        const result = Simulation.strategyConstantReal(inputs, true);
+        // Max spending $100k - SS $30k = $70k net from portfolio
+        expect(result.years[0].withdrawal).toBeCloseTo(70000, 0);
     });
 });
 
