@@ -3085,6 +3085,10 @@
                     const age = inputs.retirementAge + i;
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
 
+                    // One-time expense every 5 years (inflation-adjusted)
+                    const isExpenseYear = ((i + 1) % 5 === 0);
+                    const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
+
                     // Social Security with COLA
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
@@ -3108,7 +3112,7 @@
                         targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
                     }
 
-                    const netWithdrawal = Math.max(0, targetWithdrawal - ss);
+                    const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
                     portfolio -= netWithdrawal;
 
                     if (portfolio <= 0) {
