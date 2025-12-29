@@ -2909,9 +2909,12 @@
              */
             displayDetailedTables(results, inputs) {
                 const strategies = Object.values(results);
-                // Calculate poor percentile based on target success rate (e.g., 95% target = 5th percentile)
-                const poorPercentile = 100 - inputs.targetSuccessRate;
-                const goodPercentile = inputs.targetSuccessRate;
+                // Calculate percentiles based on target success rate
+                // Poor = lower percentile (worse outcomes), Good = higher percentile (better outcomes)
+                const rawPoor = 100 - inputs.targetSuccessRate;
+                const rawGood = inputs.targetSuccessRate;
+                const poorPercentile = Math.min(rawPoor, rawGood);
+                const goodPercentile = Math.max(rawPoor, rawGood);
 
                 let html = '<div class="space-y-8">';
 
