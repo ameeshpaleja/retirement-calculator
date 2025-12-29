@@ -2754,7 +2754,7 @@
                 strategies.forEach((strategy, index) => {
                     html += `<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4 stagger-item hover-lift" style="animation-delay: ${index * 0.1}s">
                         <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">${Report.strategyDisplayName(strategy.name)}</h4>
-                        ${SuccessRateGauge.render(strategy.successRate)}
+                        ${SuccessRateGauge.render(strategy.successRate, inputs.targetSuccessRate)}
                     </div>`;
                 });
                 html += '</div>';
@@ -3781,21 +3781,31 @@
         // SUCCESS RATE GAUGE
         // ============================================
         const SuccessRateGauge = {
-            render(successRate, containerId) {
+            render(successRate, targetSuccessRate = 90) {
                 const radius = 80;
                 const circumference = radius * Math.PI; // Half circle
                 const offset = circumference - (successRate / 100) * circumference;
 
+                // Color based on target success rate
+                // Green if meets/exceeds target, otherwise scale from red to yellow
                 let color;
-                if (successRate >= 90) color = '#10b981'; // Green
-                else if (successRate >= 75) color = '#f59e0b'; // Yellow
-                else color = '#ef4444'; // Red
+                if (successRate >= targetSuccessRate) {
+                    color = '#10b981'; // Green - meets target
+                } else {
+                    // Scale from red (0%) to yellow (just below target)
+                    const ratio = successRate / targetSuccessRate;
+                    // Interpolate between red (#ef4444) and yellow (#f59e0b)
+                    const r = Math.round(239 + (245 - 239) * ratio); // 239 -> 245
+                    const g = Math.round(68 + (158 - 68) * ratio);   // 68 -> 158
+                    const b = Math.round(68 + (11 - 68) * ratio);    // 68 -> 11
+                    color = `rgb(${r}, ${g}, ${b})`;
+                }
 
                 const darkMode = document.documentElement.classList.contains('dark');
                 const textColor = darkMode ? '#e2e8f0' : '#1f2937';
                 const bgStroke = darkMode ? '#1e293b' : '#e5e7eb';
 
-                const pulseClass = successRate >= 90 ? 'ring-pulse' : '';
+                const pulseClass = successRate >= targetSuccessRate ? 'ring-pulse' : '';
 
                 let html = `
                     <div class="gauge-container">
