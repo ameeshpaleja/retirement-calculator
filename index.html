@@ -982,7 +982,7 @@
                                     </label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
-                                        <input type="text" id="starting-withdrawal" value="120,000"
+                                        <input type="text" id="starting-withdrawal" value="50,000"
                                             class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                     </div>
                                     <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Set to $0 to use default strategy calculations</p>
@@ -1067,10 +1067,10 @@
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
-                                        Minimum Acceptable Spending ($/year, today's dollars)
+                                        Minimum Annual Withdrawal ($/year, today's dollars)
                                         <span class="tooltip">
                                             <span class="info-icon">i</span>
-                                            <span class="tooltiptext">Your minimum required spending in today's purchasing power. The calculator adjusts this for inflation each year.</span>
+                                            <span class="tooltiptext">Your minimum required withdrawal in today's purchasing power. The calculator adjusts this for inflation each year.</span>
                                         </span>
                                     </label>
                                     <div class="relative">
@@ -1083,15 +1083,15 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
-                                        Maximum Acceptable Spending ($/year, today's dollars)
+                                        Maximum Annual Withdrawal ($/year, today's dollars)
                                         <span class="tooltip">
                                             <span class="info-icon">i</span>
-                                            <span class="tooltiptext">Your maximum spending cap in today's purchasing power. Even if the strategy calculates a higher withdrawal, it will be capped at this amount. Set to $0 for no cap.</span>
+                                            <span class="tooltiptext">Your maximum withdrawal cap in today's purchasing power. Even if the strategy calculates a higher withdrawal, it will be capped at this amount. Set to $0 for no cap.</span>
                                         </span>
                                     </label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-600 dark:text-gray-400 font-medium">$</span>
-                                        <input type="text" id="max-spending" value="0"
+                                        <input type="text" id="max-spending" value="150,000"
                                             class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                     </div>
                                     <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Cap: withdrawals won't exceed this. Set to $0 for no cap.</p>
@@ -2989,8 +2989,8 @@
                 html += '<div class="border border-gray-200 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-950">';
                 html += '<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Income & Constraints</h4>';
                 html += '<div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">';
-                html += `<div><span class="font-medium">Min Spending:</span> ${Charts.formatCurrency(inputs.minSpending)}/year</div>`;
-                html += `<div><span class="font-medium">Max Spending:</span> ${inputs.maxSpending > 0 ? Charts.formatCurrency(inputs.maxSpending) + '/year' : 'No cap'}</div>`;
+                html += `<div><span class="font-medium">Min Withdrawal:</span> ${Charts.formatCurrency(inputs.minSpending)}/year</div>`;
+                html += `<div><span class="font-medium">Max Withdrawal:</span> ${inputs.maxSpending > 0 ? Charts.formatCurrency(inputs.maxSpending) + '/year' : 'No cap'}</div>`;
                 html += `<div><span class="font-medium">One-Time Expense (Every 5 Years):</span> ${Charts.formatCurrency(inputs.oneTimeExpense || 0)}</div>`;
                 html += `<div><span class="font-medium">Social Security:</span> ${Charts.formatCurrency(inputs.socialSecurity)}/year</div>`;
                 html += `<div><span class="font-medium">SS Start Age:</span> ${inputs.ssStartAge}</div>`;
