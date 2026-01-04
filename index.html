@@ -1181,7 +1181,7 @@
                         <h1 class="text-xl sm:text-2xl font-bold text-gradient-animated tracking-tight">
                             Retirement Simulator
                         </h1>
-                        <span class="text-xs text-[#636366] font-mono">v2025.12.29.1151</span>
+                        <span class="text-xs text-[#636366] font-mono">v2026.01.03.2103</span>
                         <!-- Back to Assumptions button (hidden initially) -->
                         <button id="back-to-assumptions" class="hidden text-sm font-medium text-[#0a84ff] hover:text-[#409cff] transition-colors">
                             ← Edit Assumptions
@@ -1533,7 +1533,7 @@
                     </div>
 
                     <!-- Run Button -->
-                    <div class="mt-10 text-center">
+                    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                         <button id="run-simulation"
                             class="btn-apple bg-[#0a84ff] text-white font-semibold py-4 px-16 rounded-2xl text-lg shadow-[0_0_30px_rgba(10,132,255,0.4)] hover:shadow-[0_0_50px_rgba(10,132,255,0.6)] transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                             aria-describedby="simulation-description">
@@ -1544,6 +1544,22 @@
                                 Run Simulation
                             </span>
                         </button>
+                        <div class="flex flex-col items-center gap-2">
+                            <button id="copy-share-url"
+                                class="btn-apple bg-[#2c2c2e] text-white font-medium py-4 px-8 rounded-2xl text-base border border-[#38383a] hover:bg-[#3a3a3c] transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                                aria-label="Copy shareable URL to clipboard">
+                                <span class="flex items-center gap-2 justify-center">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                    </svg>
+                                    <span id="copy-share-text">Copy Share URL</span>
+                                </span>
+                            </button>
+                            <label class="flex items-center gap-2 text-sm text-[#98989d] cursor-pointer">
+                                <input type="checkbox" id="include-autorun" class="w-4 h-4 rounded bg-[#2c2c2e] border-[#38383a] text-[#0a84ff] focus:ring-[#0a84ff] focus:ring-offset-0">
+                                <span>Auto-run on open</span>
+                            </label>
+                        </div>
                         <p id="simulation-description" class="sr-only">Runs Monte Carlo simulation with your configured assumptions</p>
                     </div>
 
@@ -3460,6 +3476,145 @@
                     document.getElementById('back-to-assumptions').classList.add('hidden');
                 });
 
+                // Copy shareable URL button
+                document.getElementById('copy-share-url').addEventListener('click', () => {
+                    this.copyShareableUrl();
+                });
+
+                // Load URL parameters and optionally auto-run
+                this.loadFromUrlParams();
+            },
+
+            /**
+             * Generate a shareable URL with current input parameters and copy to clipboard
+             */
+            async copyShareableUrl() {
+                const inputs = this.getInputs();
+                const params = new URLSearchParams();
+
+                // Add all parameters to URL
+                params.set('retirementAge', inputs.retirementAge);
+                params.set('planningAge', inputs.planningAge);
+                params.set('startingPortfolio', inputs.startingPortfolio);
+                params.set('startingWithdrawal', inputs.startingWithdrawal);
+                params.set('expectedReturn', inputs.expectedReturn);
+                params.set('volatility', inputs.volatility);
+                params.set('inflationRate', inputs.inflationRate);
+                params.set('monteCarloRuns', inputs.monteCarloRuns);
+                params.set('minSpending', inputs.minSpending);
+                params.set('maxSpending', inputs.maxSpending);
+                params.set('oneTimeExpense', inputs.oneTimeExpense);
+                params.set('socialSecurity', inputs.socialSecurity);
+                params.set('ssStartAge', inputs.ssStartAge);
+                params.set('targetSuccessRate', inputs.targetSuccessRate);
+
+                // Add strategies as comma-separated list
+                if (inputs.strategies.length > 0) {
+                    params.set('strategies', inputs.strategies.join(','));
+                }
+
+                // Add autorun if checked
+                if (document.getElementById('include-autorun').checked) {
+                    params.set('autorun', 'true');
+                }
+
+                // Build full URL
+                const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+                // Copy to clipboard
+                const textEl = document.getElementById('copy-share-text');
+                const originalText = textEl.textContent;
+
+                try {
+                    await navigator.clipboard.writeText(url);
+                    textEl.textContent = 'Copied!';
+                    setTimeout(() => {
+                        textEl.textContent = originalText;
+                    }, 2000);
+                } catch (err) {
+                    // Fallback for older browsers
+                    const textarea = document.createElement('textarea');
+                    textarea.value = url;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    textEl.textContent = 'Copied!';
+                    setTimeout(() => {
+                        textEl.textContent = originalText;
+                    }, 2000);
+                }
+            },
+
+            /**
+             * Parse URL parameters and populate form inputs
+             * Supports all simulation parameters via query string
+             */
+            loadFromUrlParams() {
+                const params = new URLSearchParams(window.location.search);
+                if (params.size === 0) return;
+
+                // Map of URL param names to input element IDs and their type
+                const paramMapping = {
+                    'retirementAge': { id: 'retirement-age', type: 'number' },
+                    'planningAge': { id: 'planning-age', type: 'number' },
+                    'startingPortfolio': { id: 'starting-portfolio', type: 'currency' },
+                    'startingWithdrawal': { id: 'starting-withdrawal', type: 'currency' },
+                    'expectedReturn': { id: 'expected-return', type: 'percent' },
+                    'volatility': { id: 'volatility', type: 'percent' },
+                    'inflationRate': { id: 'inflation-rate', type: 'percent' },
+                    'monteCarloRuns': { id: 'monte-carlo-runs', type: 'number' },
+                    'minSpending': { id: 'min-spending', type: 'currency' },
+                    'maxSpending': { id: 'max-spending', type: 'currency' },
+                    'oneTimeExpense': { id: 'one-time-expense', type: 'currency' },
+                    'socialSecurity': { id: 'social-security', type: 'currency' },
+                    'ssStartAge': { id: 'ss-start-age', type: 'number' },
+                    'targetSuccessRate': { id: 'risk-tolerance', type: 'number' }
+                };
+
+                // Apply each parameter to its corresponding input
+                for (const [paramName, config] of Object.entries(paramMapping)) {
+                    const value = params.get(paramName);
+                    if (value !== null) {
+                        const element = document.getElementById(config.id);
+                        if (element) {
+                            if (config.type === 'currency') {
+                                element.value = formatNumber(parseFloat(value));
+                            } else if (config.type === 'percent') {
+                                element.value = parseFloat(value).toFixed(1);
+                            } else {
+                                element.value = value;
+                            }
+                        }
+                    }
+                }
+
+                // Handle strategy selections (comma-separated list)
+                const strategies = params.get('strategies');
+                if (strategies) {
+                    const strategyList = strategies.split(',').map(s => s.trim());
+                    const allStrategies = ['constant-real', 'constant-pct', 'vpw', 'guardrails', 'rmd'];
+
+                    // Uncheck all strategies first
+                    allStrategies.forEach(s => {
+                        const el = document.getElementById(`strategy-${s}`);
+                        if (el) el.checked = false;
+                    });
+
+                    // Check only the specified strategies
+                    strategyList.forEach(s => {
+                        const el = document.getElementById(`strategy-${s}`);
+                        if (el) el.checked = true;
+                    });
+                }
+
+                // Auto-run simulation if requested
+                if (params.get('autorun') === 'true' || params.get('autorun') === '1') {
+                    // Small delay to ensure UI is ready
+                    setTimeout(() => this.runSimulation(), 200);
+                }
             },
 
             /**
