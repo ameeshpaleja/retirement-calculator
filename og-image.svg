@@ -1,0 +1,84 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#000000"/>
+      <stop offset="100%" style="stop-color:#1c1c1e"/>
+    </linearGradient>
+    <linearGradient id="chartGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#0a84ff;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#0a84ff;stop-opacity:0.4"/>
+    </linearGradient>
+    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#30d158"/>
+      <stop offset="50%" style="stop-color:#0a84ff"/>
+      <stop offset="100%" style="stop-color:#bf5af2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.1" stroke="#ffffff" stroke-width="0.5">
+    <line x1="0" y1="157" x2="1200" y2="157"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="472" x2="1200" y2="472"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+  </g>
+
+  <!-- Chart area background -->
+  <rect x="580" y="120" width="560" height="380" rx="16" fill="#1c1c1e" opacity="0.8"/>
+
+  <!-- Simulated Monte Carlo paths -->
+  <g opacity="0.3">
+    <path d="M620 420 Q720 380 820 340 T1020 280" stroke="#30d158" stroke-width="2" fill="none"/>
+    <path d="M620 420 Q720 400 820 420 T1020 380" stroke="#0a84ff" stroke-width="2" fill="none"/>
+    <path d="M620 420 Q720 440 820 400 T1020 320" stroke="#bf5af2" stroke-width="2" fill="none"/>
+    <path d="M620 420 Q720 360 820 300 T1020 220" stroke="#ff9f0a" stroke-width="2" fill="none"/>
+    <path d="M620 420 Q720 420 820 460 T1020 440" stroke="#ff453a" stroke-width="2" fill="none"/>
+  </g>
+
+  <!-- Main probability cone -->
+  <path d="M620 420 Q720 350 820 320 Q920 290 1020 240 L1020 380 Q920 360 820 400 Q720 430 620 420 Z"
+        fill="url(#chartGrad)" opacity="0.6"/>
+
+  <!-- Median line -->
+  <path d="M620 420 Q720 380 820 350 Q920 320 1020 300"
+        stroke="url(#lineGrad)" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- Data points -->
+  <circle cx="620" cy="420" r="6" fill="#30d158"/>
+  <circle cx="720" cy="380" r="5" fill="#0a84ff"/>
+  <circle cx="820" cy="350" r="5" fill="#0a84ff"/>
+  <circle cx="920" cy="320" r="5" fill="#0a84ff"/>
+  <circle cx="1020" cy="300" r="6" fill="#bf5af2"/>
+
+  <!-- Chart labels -->
+  <text x="620" y="480" fill="#636366" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14">Age 65</text>
+  <text x="1000" y="480" fill="#636366" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14">Age 95</text>
+
+  <!-- Title -->
+  <text x="60" y="180" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="52" font-weight="700">Retirement</text>
+  <text x="60" y="245" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="52" font-weight="700">Withdrawal</text>
+  <text x="60" y="310" fill="#0a84ff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="52" font-weight="700">Simulator</text>
+
+  <!-- Subtitle -->
+  <text x="60" y="370" fill="#98989d" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="22">Monte Carlo analysis with 10,000+ scenarios</text>
+
+  <!-- Feature pills -->
+  <g font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="16">
+    <rect x="60" y="420" width="140" height="36" rx="18" fill="#30d158" opacity="0.2"/>
+    <text x="130" y="444" fill="#30d158" text-anchor="middle" font-weight="500">5 Strategies</text>
+
+    <rect x="215" y="420" width="160" height="36" rx="18" fill="#0a84ff" opacity="0.2"/>
+    <text x="295" y="444" fill="#0a84ff" text-anchor="middle" font-weight="500">Success Rates</text>
+
+    <rect x="390" y="420" width="130" height="36" rx="18" fill="#bf5af2" opacity="0.2"/>
+    <text x="455" y="444" fill="#bf5af2" text-anchor="middle" font-weight="500">Free Tool</text>
+  </g>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="620" width="1200" height="10" fill="url(#lineGrad)"/>
+</svg>
