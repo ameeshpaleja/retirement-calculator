@@ -1181,7 +1181,7 @@
                         <h1 class="text-xl sm:text-2xl font-bold text-gradient-animated tracking-tight">
                             Retirement Simulator
                         </h1>
-                        <span class="text-xs text-[#636366] font-mono">v2026.01.03.2103</span>
+                        <span class="text-xs text-[#636366] font-mono">v2026.01.04.1444</span>
                         <!-- Back to Assumptions button (hidden initially) -->
                         <button id="back-to-assumptions" class="hidden text-sm font-medium text-[#0a84ff] hover:text-[#409cff] transition-colors">
                             ← Edit Assumptions
@@ -1951,7 +1951,6 @@
                     // Min/max spending grows with inflation to maintain purchasing power
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
                     const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
-                    const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -1961,13 +1960,16 @@
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
 
-                    // Withdrawal is the greater of: 4% of portfolio, minSpending, or startingWithdrawal
-                    const percentWithdrawal = portfolio * (withdrawalRate / 100);
-                    let targetWithdrawal = Math.max(percentWithdrawal, inflationAdjustedMinSpending);
-                    if (inflationAdjustedStartingWithdrawal > 0) {
-                        targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+                    // Year 1: Use startingWithdrawal if specified, otherwise use 4% of portfolio
+                    // Years 2+: Use 4% of current portfolio (the strategy's natural behavior)
+                    let targetWithdrawal;
+                    if (i === 0 && baseStartingWithdrawal > 0) {
+                        targetWithdrawal = baseStartingWithdrawal;
+                    } else {
+                        targetWithdrawal = portfolio * (withdrawalRate / 100);
                     }
-                    // Apply max spending cap
+                    // Apply min/max spending constraints
+                    targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedMinSpending);
                     targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -2031,7 +2033,6 @@
                     const portfolioStart = portfolio;
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
                     const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
-                    const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -2041,14 +2042,18 @@
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
 
-                    const yearsRemaining = inputs.planningAge - age;
-                    const vpwPct = this.vpwPercentage(yearsRemaining, 60);
-                    const vpwWithdrawal = portfolio * (vpwPct / 100);
-                    let targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
-                    if (inflationAdjustedStartingWithdrawal > 0) {
-                        targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+                    // Year 1: Use startingWithdrawal if specified, otherwise use VPW calculation
+                    // Years 2+: Use VPW calculation (the strategy's natural behavior)
+                    let targetWithdrawal;
+                    if (i === 0 && baseStartingWithdrawal > 0) {
+                        targetWithdrawal = baseStartingWithdrawal;
+                    } else {
+                        const yearsRemaining = inputs.planningAge - age;
+                        const vpwPct = this.vpwPercentage(yearsRemaining, 60);
+                        targetWithdrawal = portfolio * (vpwPct / 100);
                     }
-                    // Apply max spending cap
+                    // Apply min/max spending constraints
+                    targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedMinSpending);
                     targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -2143,10 +2148,16 @@
                     // Check if withdrawal rate is outside guardrails
                     const currentRate = (withdrawal / portfolioStart) * 100;
 
-                    if (currentRate > upperGuardrail) {
-                        withdrawal *= (1 - adjustmentFactor); // Reduce spending
-                    } else if (currentRate < lowerGuardrail && portfolio > 0) {
-                        withdrawal *= (1 + adjustmentFactor); // Increase spending
+                    // Don't apply guardrails in Year 1 if user specified startingWithdrawal
+                    // (respect the user's explicit Year 1 choice)
+                    const skipGuardrailsYear1 = (i === 0 && inputs.startingWithdrawal && inputs.startingWithdrawal > 0);
+
+                    if (!skipGuardrailsYear1) {
+                        if (currentRate > upperGuardrail) {
+                            withdrawal *= (1 - adjustmentFactor); // Reduce spending
+                        } else if (currentRate < lowerGuardrail && portfolio > 0) {
+                            withdrawal *= (1 + adjustmentFactor); // Increase spending
+                        }
                     }
 
                     // Apply min/max spending constraints
@@ -2218,7 +2229,6 @@
                     const portfolioStart = portfolio;
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
                     const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
-                    const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
                     // One-time expense every 5 years (inflation-adjusted)
                     const isExpenseYear = ((i + 1) % 5 === 0);
@@ -2228,13 +2238,17 @@
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
 
-                    const lifeExp = this.lifeExpectancy(age);
-                    const rmdWithdrawal = portfolio / lifeExp;
-                    let targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
-                    if (inflationAdjustedStartingWithdrawal > 0) {
-                        targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+                    // Year 1: Use startingWithdrawal if specified, otherwise use RMD calculation
+                    // Years 2+: Use RMD calculation (the strategy's natural behavior)
+                    let targetWithdrawal;
+                    if (i === 0 && baseStartingWithdrawal > 0) {
+                        targetWithdrawal = baseStartingWithdrawal;
+                    } else {
+                        const lifeExp = this.lifeExpectancy(age);
+                        targetWithdrawal = portfolio / lifeExp;
                     }
-                    // Apply max spending cap
+                    // Apply min/max spending constraints
+                    targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedMinSpending);
                     targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
                     const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 

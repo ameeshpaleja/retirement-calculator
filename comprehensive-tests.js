@@ -249,18 +249,23 @@ const Simulation = {
             const portfolioStart = portfolio;
             const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
             const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
-            const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
 
             const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
             const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
-            const percentWithdrawal = portfolio * (withdrawalRate / 100);
-            let targetWithdrawal = Math.max(percentWithdrawal, inflationAdjustedMinSpending);
-            if (inflationAdjustedStartingWithdrawal > 0) {
-                targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+
+            // Year 1: Use startingWithdrawal if specified, otherwise use 4% of portfolio
+            // Years 2+: Use 4% of current portfolio (the strategy's natural behavior)
+            let targetWithdrawal;
+            if (i === 0 && baseStartingWithdrawal > 0) {
+                targetWithdrawal = baseStartingWithdrawal;
+            } else {
+                targetWithdrawal = portfolio * (withdrawalRate / 100);
             }
+            // Apply min/max spending constraints
+            targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedMinSpending);
             targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
             const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -320,7 +325,6 @@ const Simulation = {
             const portfolioStart = portfolio;
             const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
             const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
-            const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
@@ -328,13 +332,21 @@ const Simulation = {
             const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
             const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
 
+            // Calculate VPW percentage for this year (always, for reporting)
             const yearsRemaining = inputs.planningAge - age;
             const vpwPct = this.vpwPercentage(yearsRemaining, 60);
             const vpwWithdrawal = portfolio * (vpwPct / 100);
-            let targetWithdrawal = Math.max(vpwWithdrawal, inflationAdjustedMinSpending);
-            if (inflationAdjustedStartingWithdrawal > 0) {
-                targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+
+            // Year 1: Use startingWithdrawal if specified, otherwise use VPW calculation
+            // Years 2+: Use VPW calculation (the strategy's natural behavior)
+            let targetWithdrawal;
+            if (i === 0 && baseStartingWithdrawal > 0) {
+                targetWithdrawal = baseStartingWithdrawal;
+            } else {
+                targetWithdrawal = vpwWithdrawal;
             }
+            // Apply min/max spending constraints
+            targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedMinSpending);
             targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
             const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -422,10 +434,16 @@ const Simulation = {
 
             const currentRate = (withdrawal / portfolioStart) * 100;
 
-            if (currentRate > upperGuardrail) {
-                withdrawal *= (1 - adjustmentFactor);
-            } else if (currentRate < lowerGuardrail && portfolio > 0) {
-                withdrawal *= (1 + adjustmentFactor);
+            // Don't apply guardrails in Year 1 if user specified startingWithdrawal
+            // (respect the user's explicit Year 1 choice)
+            const skipGuardrailsYear1 = (i === 0 && inputs.startingWithdrawal && inputs.startingWithdrawal > 0);
+
+            if (!skipGuardrailsYear1) {
+                if (currentRate > upperGuardrail) {
+                    withdrawal *= (1 - adjustmentFactor);
+                } else if (currentRate < lowerGuardrail && portfolio > 0) {
+                    withdrawal *= (1 + adjustmentFactor);
+                }
             }
 
             // Apply min/max spending constraints
@@ -493,7 +511,6 @@ const Simulation = {
             const portfolioStart = portfolio;
             const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
             const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
-            const inflationAdjustedStartingWithdrawal = baseStartingWithdrawal > 0 ? baseStartingWithdrawal * Math.pow(inflationMultiplier, i) : 0;
 
             const isExpenseYear = ((i + 1) % 5 === 0);
             const oneTimeExpenseThisYear = isExpenseYear ? (inputs.oneTimeExpense || 0) * Math.pow(inflationMultiplier, i) : 0;
@@ -501,12 +518,20 @@ const Simulation = {
             const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
             const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
 
+            // Calculate RMD for this year (always, for reporting)
             const lifeExp = this.lifeExpectancy(age);
             const rmdWithdrawal = portfolio / lifeExp;
-            let targetWithdrawal = Math.max(rmdWithdrawal, inflationAdjustedMinSpending);
-            if (inflationAdjustedStartingWithdrawal > 0) {
-                targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedStartingWithdrawal);
+
+            // Year 1: Use startingWithdrawal if specified, otherwise use RMD calculation
+            // Years 2+: Use RMD calculation (the strategy's natural behavior)
+            let targetWithdrawal;
+            if (i === 0 && baseStartingWithdrawal > 0) {
+                targetWithdrawal = baseStartingWithdrawal;
+            } else {
+                targetWithdrawal = rmdWithdrawal;
             }
+            // Apply min/max spending constraints
+            targetWithdrawal = Math.max(targetWithdrawal, inflationAdjustedMinSpending);
             targetWithdrawal = Math.min(targetWithdrawal, inflationAdjustedMaxSpending);
             const netWithdrawal = Math.max(0, targetWithdrawal - ss) + oneTimeExpenseThisYear;
 
@@ -1445,17 +1470,44 @@ describe('Starting Withdrawal Input - All Strategies', () => {
         expect(result.years[0].withdrawal).toBeCloseTo(60000, 0);
     });
 
-    test('VPW uses startingWithdrawal as floor', () => {
-        const inputs = { ...baseInputs, startingWithdrawal: 100000 };
+    test('VPW uses startingWithdrawal in Year 1 only', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 100000, planningAge: 90 };
         const result = Simulation.strategyVPW(inputs, true);
-        // VPW calculation might be lower, but startingWithdrawal should set floor
-        expect(result.years[0].withdrawal).toBeGreaterThanOrEqual(100000);
+        // Year 1 should use startingWithdrawal
+        expect(result.years[0].withdrawal).toBeCloseTo(100000, 0);
+        // Year 2 reverts to VPW calculation
+        // VPW at 24 years remaining = 5.5% (not 4.7% - that's for 25+ years)
+        // Portfolio after Year 1: 2M - 100k = 1.9M, then grows 5% = 1.995M
+        // Year 2 VPW: 1.995M * 5.5% = 109,725
+        // NOTE: Year 2 CAN be higher than Year 1 because VPW% increases as time decreases
+        expect(result.years[1].withdrawal).toBeGreaterThan(0);
+        // Verify it's using VPW formula, not startingWithdrawal as floor
+        const expectedVpwPct = Simulation.vpwPercentage(24, 60); // 5.5%
+        const portfolioYear2 = 1900000 * 1.05; // 1.995M
+        expect(result.years[1].withdrawal).toBeCloseTo(portfolioYear2 * expectedVpwPct / 100, 1000);
     });
 
-    test('RMD uses startingWithdrawal as floor', () => {
+    test('RMD uses startingWithdrawal in Year 1 only', () => {
         const inputs = { ...baseInputs, startingWithdrawal: 100000 };
         const result = Simulation.strategyRMD(inputs, true);
-        expect(result.years[0].withdrawal).toBeGreaterThanOrEqual(100000);
+        // Year 1 should use startingWithdrawal
+        expect(result.years[0].withdrawal).toBeCloseTo(100000, 0);
+        // Year 2 should revert to RMD calculation
+        // Life expectancy at 66 = 24
+        // Portfolio after Year 1: 2M - 100k = 1.9M, grows 5% = 1.995M
+        // Year 2 RMD: 1.995M / 24 = 83,125
+        expect(result.years[1].withdrawal).toBeLessThan(100000);
+    });
+
+    test('Constant Percent uses startingWithdrawal in Year 1 only', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 100000 };
+        const result = Simulation.strategyConstantPercent(inputs, true);
+        // Year 1 should use startingWithdrawal
+        expect(result.years[0].withdrawal).toBeCloseTo(100000, 0);
+        // Year 2 should revert to 4% of current portfolio
+        // Portfolio after Year 1: 2M - 100k = 1.9M, grows 5% = 1.995M
+        // Year 2: 4% of 1.995M = 79,800
+        expect(result.years[1].withdrawal).toBeLessThan(100000);
     });
 });
 
@@ -1771,6 +1823,199 @@ describe('Social Security with New Spending Inputs', () => {
         const result = Simulation.strategyConstantReal(inputs, true);
         // Max spending $100k - SS $30k = $70k net from portfolio
         expect(result.years[0].withdrawal).toBeCloseTo(70000, 0);
+    });
+});
+
+// ============================================
+// TEST GROUP 23: Starting Withdrawal Consistency Across All Strategies
+// ============================================
+describe('Starting Withdrawal Consistency - All 5 Strategies', () => {
+    const baseInputs = {
+        retirementAge: 65,
+        planningAge: 68,
+        startingPortfolio: 1000000,
+        expectedReturn: 0, // Zero return for predictable math
+        volatility: 0,
+        inflationRate: 0,
+        minSpending: 0,
+        maxSpending: 0,
+        oneTimeExpense: 0,
+        socialSecurity: 0,
+        ssStartAge: 70
+    };
+
+    test('All strategies use exact startingWithdrawal in Year 1 when specified', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 35000 };
+
+        const r1 = Simulation.strategyConstantReal(inputs, true);
+        const r2 = Simulation.strategyConstantPercent(inputs, true);
+        const r3 = Simulation.strategyVPW(inputs, true);
+        const r4 = Simulation.strategyGuardrails(inputs, true);
+        const r5 = Simulation.strategyRMD(inputs, true);
+
+        expect(r1.years[0].withdrawal).toBeCloseTo(35000, 0);
+        expect(r2.years[0].withdrawal).toBeCloseTo(35000, 0);
+        expect(r3.years[0].withdrawal).toBeCloseTo(35000, 0);
+        expect(r4.years[0].withdrawal).toBeCloseTo(35000, 0);
+        expect(r5.years[0].withdrawal).toBeCloseTo(35000, 0);
+    });
+
+    test('All strategies use LOW startingWithdrawal in Year 1 (below defaults)', () => {
+        // This tests that all strategies respect a LOW startingWithdrawal
+        const inputs = { ...baseInputs, startingWithdrawal: 20000 };
+
+        const r1 = Simulation.strategyConstantReal(inputs, true);
+        const r2 = Simulation.strategyConstantPercent(inputs, true);
+        const r3 = Simulation.strategyVPW(inputs, true);
+        const r4 = Simulation.strategyGuardrails(inputs, true);
+        const r5 = Simulation.strategyRMD(inputs, true);
+
+        // All should use $20k even though defaults are higher
+        expect(r1.years[0].withdrawal).toBeCloseTo(20000, 0);
+        expect(r2.years[0].withdrawal).toBeCloseTo(20000, 0);
+        expect(r3.years[0].withdrawal).toBeCloseTo(20000, 0);
+        expect(r4.years[0].withdrawal).toBeCloseTo(20000, 0);
+        expect(r5.years[0].withdrawal).toBeCloseTo(20000, 0);
+    });
+
+    test('Fixed strategies (1 & 4) continue to inflation-adjust startingWithdrawal', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 40000, inflationRate: 3 };
+
+        const r1 = Simulation.strategyConstantReal(inputs, true);
+        const r4 = Simulation.strategyGuardrails(inputs, true);
+
+        // Year 1: $40k, Year 2: $41,200 (inflated), Year 3: $42,436
+        expect(r1.years[0].withdrawal).toBeCloseTo(40000, 0);
+        expect(r1.years[1].withdrawal).toBeCloseTo(41200, 10);
+        expect(r1.years[2].withdrawal).toBeCloseTo(42436, 10);
+
+        expect(r4.years[0].withdrawal).toBeCloseTo(40000, 0);
+        expect(r4.years[1].withdrawal).toBeCloseTo(41200, 10);
+    });
+
+    test('Dynamic strategies (2, 3, 5) revert to formula after Year 1', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 50000 };
+
+        const r2 = Simulation.strategyConstantPercent(inputs, true);
+        const r3 = Simulation.strategyVPW(inputs, true);
+        const r5 = Simulation.strategyRMD(inputs, true);
+
+        // Year 1: All use $50k
+        expect(r2.years[0].withdrawal).toBeCloseTo(50000, 0);
+        expect(r3.years[0].withdrawal).toBeCloseTo(50000, 0);
+        expect(r5.years[0].withdrawal).toBeCloseTo(50000, 0);
+
+        // Year 2: All use their formulas (portfolio is now 950k after 50k withdrawal)
+        // Strategy 2: 4% of 950k = 38000
+        expect(r2.years[1].withdrawal).toBeCloseTo(38000, 0);
+
+        // Strategy 3: VPW% of 950k (years remaining = 2, VPW ~= 22%)
+        const vpwPct = Simulation.vpwPercentage(2, 60);
+        expect(r3.years[1].withdrawal).toBeCloseTo(950000 * vpwPct / 100, 100);
+
+        // Strategy 5: RMD = 950k / lifeExp(66)
+        const lifeExp = Simulation.lifeExpectancy(66);
+        expect(r5.years[1].withdrawal).toBeCloseTo(950000 / lifeExp, 100);
+    });
+
+    test('startingWithdrawal = 0 uses each strategy default', () => {
+        const inputs = { ...baseInputs, startingWithdrawal: 0 };
+
+        const r1 = Simulation.strategyConstantReal(inputs, true);
+        const r2 = Simulation.strategyConstantPercent(inputs, true);
+        const r3 = Simulation.strategyVPW(inputs, true);
+        const r4 = Simulation.strategyGuardrails(inputs, true);
+        const r5 = Simulation.strategyRMD(inputs, true);
+
+        // Strategy 1: 4.5% of 1M = 45000
+        expect(r1.years[0].withdrawal).toBeCloseTo(45000, 0);
+
+        // Strategy 2: 4% of 1M = 40000
+        expect(r2.years[0].withdrawal).toBeCloseTo(40000, 0);
+
+        // Strategy 3: VPW% of 1M (3 years remaining)
+        const vpwPct = Simulation.vpwPercentage(3, 60);
+        expect(r3.years[0].withdrawal).toBeCloseTo(1000000 * vpwPct / 100, 100);
+
+        // Strategy 4: 5% of 1M = 50000
+        expect(r4.years[0].withdrawal).toBeCloseTo(50000, 0);
+
+        // Strategy 5: RMD = 1M / lifeExp(65)
+        const lifeExp = Simulation.lifeExpectancy(65);
+        expect(r5.years[0].withdrawal).toBeCloseTo(1000000 / lifeExp, 100);
+    });
+
+    test('Year-by-year math verification for Constant Percent with startingWithdrawal', () => {
+        const inputs = {
+            ...baseInputs,
+            startingWithdrawal: 60000,
+            expectedReturn: 5,
+            planningAge: 68
+        };
+        const result = Simulation.strategyConstantPercent(inputs, true);
+
+        // Year 1: Withdraw $60k (startingWithdrawal)
+        expect(result.years[0].portfolioStart).toBeCloseTo(1000000, 0);
+        expect(result.years[0].withdrawal).toBeCloseTo(60000, 0);
+        // End: (1000000 - 60000) * 1.05 = 987000
+        expect(result.years[0].portfolioEnd).toBeCloseTo(987000, 0);
+
+        // Year 2: 4% of 987000 = 39480
+        expect(result.years[1].portfolioStart).toBeCloseTo(987000, 0);
+        expect(result.years[1].withdrawal).toBeCloseTo(39480, 0);
+        // End: (987000 - 39480) * 1.05 = 994896
+        expect(result.years[1].portfolioEnd).toBeCloseTo(994896, 10);
+
+        // Year 3: 4% of 994896 = 39795.84
+        expect(result.years[2].portfolioStart).toBeCloseTo(994896, 10);
+        expect(result.years[2].withdrawal).toBeCloseTo(39795.84, 1);
+    });
+
+    test('Year-by-year math verification for VPW with startingWithdrawal', () => {
+        const inputs = {
+            ...baseInputs,
+            startingWithdrawal: 50000,
+            expectedReturn: 0,
+            planningAge: 68
+        };
+        const result = Simulation.strategyVPW(inputs, true);
+
+        // Year 1: Withdraw $50k (startingWithdrawal)
+        expect(result.years[0].withdrawal).toBeCloseTo(50000, 0);
+        // End: 1000000 - 50000 = 950000
+
+        // Year 2: VPW at 2 years remaining = 22% (approx)
+        const vpwPct2 = Simulation.vpwPercentage(2, 60);
+        expect(result.years[1].withdrawal).toBeCloseTo(950000 * vpwPct2 / 100, 100);
+
+        // Year 3: VPW at 1 year remaining = 22% (min(100, 20+1*2))
+        const vpwPct1 = Simulation.vpwPercentage(1, 60);
+        // Portfolio after year 2
+        const portfolioAfterYear2 = 950000 - result.years[1].withdrawal;
+        expect(result.years[2].withdrawal).toBeCloseTo(portfolioAfterYear2 * vpwPct1 / 100, 100);
+    });
+
+    test('Year-by-year math verification for RMD with startingWithdrawal', () => {
+        const inputs = {
+            ...baseInputs,
+            startingWithdrawal: 45000,
+            expectedReturn: 0,
+            planningAge: 68
+        };
+        const result = Simulation.strategyRMD(inputs, true);
+
+        // Year 1 (age 65): Withdraw $45k (startingWithdrawal)
+        expect(result.years[0].withdrawal).toBeCloseTo(45000, 0);
+        // End: 1000000 - 45000 = 955000
+
+        // Year 2 (age 66): RMD = 955000 / lifeExp(66)
+        const lifeExp66 = Simulation.lifeExpectancy(66);
+        expect(result.years[1].withdrawal).toBeCloseTo(955000 / lifeExp66, 10);
+
+        // Year 3 (age 67): RMD = remaining / lifeExp(67)
+        const portfolioAfterYear2 = 955000 - result.years[1].withdrawal;
+        const lifeExp67 = Simulation.lifeExpectancy(67);
+        expect(result.years[2].withdrawal).toBeCloseTo(portfolioAfterYear2 / lifeExp67, 10);
     });
 });
 
