@@ -1181,7 +1181,7 @@
                         <h1 class="text-xl sm:text-2xl font-bold text-gradient-animated tracking-tight">
                             Retirement Simulator
                         </h1>
-                        <span class="text-xs text-[#636366] font-mono">v2026.01.04.1444</span>
+                        <span class="text-xs text-[#636366] font-mono">v2026.01.04.1549</span>
                         <!-- Back to Assumptions button (hidden initially) -->
                         <button id="back-to-assumptions" class="hidden text-sm font-medium text-[#0a84ff] hover:text-[#409cff] transition-colors">
                             ← Edit Assumptions
@@ -1351,6 +1351,24 @@
                                     <input type="text" id="monte-carlo-runs" value="10,000"
                                         class="w-full px-3 py-2 bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                 </div>
+
+                                <!-- ============================================
+                                     RETURN DISTRIBUTION MODEL - Normal vs Fat-Tailed
+                                     ============================================ -->
+                                <div>
+                                    <label class="block text-sm font-medium text-[#98989d] mb-2">
+                                        Return Distribution Model
+                                        <span class="tooltip">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltiptext"><strong>Standard Normal:</strong> Classic bell curve distribution. <strong>Fat-Tailed (Student's t):</strong> More extreme events (crashes/booms) than normal distribution suggests. More realistic for market returns.</span>
+                                        </span>
+                                    </label>
+                                    <select id="return-distribution"
+                                        class="w-full px-3 py-2 bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                        <option value="normal" selected>Standard Normal</option>
+                                        <option value="fat-tailed">Fat-Tailed (Student's t)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -1396,12 +1414,15 @@
                                     <p class="text-xs text-[#636366] mt-1">Cap: withdrawals won't exceed this. Set to $0 for no cap.</p>
                                 </div>
 
+                                <!-- ============================================
+                                     PERIODIC LARGE EXPENSE - Configurable timing
+                                     ============================================ -->
                                 <div>
                                     <label class="block text-sm font-medium text-[#98989d] mb-2">
-                                        One-Time Expense Every 5 Years (today's dollars)
+                                        Periodic Large Expense (today's dollars)
                                         <span class="tooltip">
                                             <span class="info-icon">i</span>
-                                            <span class="tooltiptext">Large one-time expense occurring every 5 years (e.g., car replacement, home renovation). Deducted in addition to annual spending. Adjusted for inflation.</span>
+                                            <span class="tooltiptext">Recurring large expense (e.g., car replacement, home renovation). Deducted in addition to annual spending. Adjusted for inflation. Configure timing below.</span>
                                         </span>
                                     </label>
                                     <div class="relative">
@@ -1409,8 +1430,45 @@
                                         <input type="text" id="one-time-expense" value="0"
                                             class="w-full pl-11 pr-3 py-2.5 bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                                     </div>
-                                    <p class="text-xs text-[#636366] mt-1">Occurs in years 5, 10, 15, 20, etc. Set to $0 to disable.</p>
                                 </div>
+
+                                <!-- Periodic Expense Timing Configuration -->
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            First Year
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">First year expense occurs (years after retirement). Default: 5</span>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="expense-first-year" value="5" min="1" max="50"
+                                            class="w-full px-2 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Every N Years
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">How often the expense repeats. Default: 5 years</span>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="expense-frequency" value="5" min="1" max="50"
+                                            class="w-full px-2 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Max Count
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Maximum number of occurrences. Set to 0 for unlimited (continues until end of plan).</span>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="expense-max-count" value="0" min="0" max="50"
+                                            class="w-full px-2 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    </div>
+                                </div>
+                                <p class="text-xs text-[#636366] mt-1">Set expense to $0 to disable. Max Count of 0 = unlimited.</p>
 
                                 <div>
                                     <label class="block text-sm font-medium text-[#98989d] mb-2">
@@ -1527,6 +1585,129 @@
                                         </span>
                                     </span>
                                 </label>
+                            </div>
+
+                            <!-- ============================================
+                                 STRATEGY PARAMETERS - Configurable rates and settings
+                                 ============================================ -->
+                            <div class="mt-6 pt-5 border-t border-[#38383a]">
+                                <h4 class="text-sm font-semibold text-[#98989d] mb-4 flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-[#bf5af2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                                    Strategy Parameters (Optional)
+                                </h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <!-- Constant Real Rate -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Constant Real Rate (%)
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Initial withdrawal rate for the Constant Real (4% Rule) strategy. Default: 4.5%</span>
+                                            </span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="text" id="constant-real-rate" value="4.5"
+                                                class="w-full pr-8 pl-3 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#636366] text-sm">%</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Constant % of Portfolio Rate -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Constant % Rate (%)
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Withdrawal rate for the Constant % of Portfolio strategy. Default: 4.0%</span>
+                                            </span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="text" id="constant-pct-rate" value="4.0"
+                                                class="w-full pr-8 pl-3 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#636366] text-sm">%</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Guardrails Initial Rate -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Guardrails Initial Rate (%)
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Initial withdrawal rate for Guardrails strategy. Default: 5.0%</span>
+                                            </span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="text" id="guardrails-initial-rate" value="5.0"
+                                                class="w-full pr-8 pl-3 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#636366] text-sm">%</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Guardrails Upper Multiplier -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Upper Guardrail (×)
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Upper guardrail multiplier. Triggers spending reduction when rate exceeds initial × this. Default: 1.2 (20% above)</span>
+                                            </span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="text" id="guardrails-upper" value="1.2"
+                                                class="w-full pr-8 pl-3 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#636366] text-sm">×</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Guardrails Lower Multiplier -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Lower Guardrail (×)
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Lower guardrail multiplier. Triggers spending increase when rate falls below initial × this. Default: 0.8 (20% below)</span>
+                                            </span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="text" id="guardrails-lower" value="0.8"
+                                                class="w-full pr-8 pl-3 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#636366] text-sm">×</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Guardrails Adjustment Step -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            Guardrails Adjustment (%)
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Amount to adjust spending when guardrails are triggered. Default: 10%</span>
+                                            </span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="text" id="guardrails-adjustment" value="10.0"
+                                                class="w-full pr-8 pl-3 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#636366] text-sm">%</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- VPW Stock Allocation -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-[#98989d] mb-1">
+                                            VPW Stock Allocation (%)
+                                            <span class="tooltip ml-1">
+                                                <span class="info-icon text-[10px]">i</span>
+                                                <span class="tooltiptext">Stock allocation for VPW percentage calculation. Higher = slightly higher withdrawal rates. Default: 60%</span>
+                                            </span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="text" id="vpw-stock-allocation" value="60"
+                                                class="w-full pr-8 pl-3 py-2 text-sm bg-[#2c2c2e] border border-[#3a3a3c] rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#636366] text-sm">%</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1794,28 +1975,119 @@
             },
 
             /**
+             * Generates a random number from Student's t distribution
+             * Uses the ratio of uniforms method for df=4 (fat tails)
+             * @param {number} df - Degrees of freedom (lower = fatter tails)
+             * @returns {number} Random value from t-distribution
+             */
+            randomStudentT(df = 4) {
+                // Generate t-distributed random using chi-squared transformation
+                // t = Z / sqrt(V/df) where Z ~ N(0,1) and V ~ chi-squared(df)
+                const z = this.randomNormal();
+
+                // Generate chi-squared(df) as sum of df squared normals
+                let chiSq = 0;
+                for (let i = 0; i < df; i++) {
+                    const n = this.randomNormal();
+                    chiSq += n * n;
+                }
+
+                return z / Math.sqrt(chiSq / df);
+            },
+
+            /**
              * Generates annual return based on mean and volatility
              * @param {number} mean - Expected return %
              * @param {number} volatility - Standard deviation %
              * @param {boolean} deterministic - If true, return mean (for median path)
+             * @param {string} distribution - 'normal' or 'fat-tailed'
              * @returns {number} Annual return as decimal
              */
-            generateReturn(mean, volatility, deterministic = false) {
+            generateReturn(mean, volatility, deterministic = false, distribution = 'normal') {
                 if (deterministic) return mean / 100;
-                const z = this.randomNormal();
+
+                let z;
+                if (distribution === 'fat-tailed') {
+                    // Student's t with df=4: fatter tails than normal
+                    // Scale by sqrt(df/(df-2)) to normalize variance to 1
+                    const df = 4;
+                    z = this.randomStudentT(df) * Math.sqrt((df - 2) / df);
+                } else {
+                    z = this.randomNormal();
+                }
+
                 return (mean + z * volatility) / 100;
             },
 
             /**
-             * Simplified actuarial life expectancy table
-             * Returns expected years remaining at given age
+             * IRS Uniform Lifetime Table - Life Expectancy by Age
+             * Used for RMD-style withdrawal calculations.
+             * Values are approximate and based on IRS Publication 590-B.
+             * Linear interpolation is used between table entries for smooth results.
+             *
+             * Key properties:
+             * - Monotonically decreasing (life expectancy never increases with age)
+             * - Minimum return value of 2.0 years to avoid excessive withdrawal rates
+             * - Realistic values matching IRS tables
+             */
+            _lifeExpectancyTable: [
+                { age: 20, expectancy: 63.0 },
+                { age: 30, expectancy: 53.3 },
+                { age: 40, expectancy: 43.6 },
+                { age: 50, expectancy: 34.2 },
+                { age: 55, expectancy: 29.6 },
+                { age: 60, expectancy: 25.2 },
+                { age: 65, expectancy: 21.0 },
+                { age: 70, expectancy: 17.0 },
+                { age: 72, expectancy: 15.5 },  // RMD start age
+                { age: 75, expectancy: 13.4 },
+                { age: 80, expectancy: 10.2 },
+                { age: 85, expectancy: 7.6 },
+                { age: 90, expectancy: 5.3 },
+                { age: 95, expectancy: 3.7 },
+                { age: 100, expectancy: 2.7 },
+                { age: 105, expectancy: 2.2 },
+                { age: 110, expectancy: 2.0 },
+                { age: 120, expectancy: 2.0 }   // Cap at minimum
+            ],
+
+            /**
+             * Returns expected years remaining at given age.
+             * Uses linear interpolation between IRS Uniform Lifetime Table values.
+             * Always returns at least 2.0 years to avoid excessive withdrawal rates.
+             *
+             * @param {number} age - Current age in years
+             * @returns {number} - Expected years remaining (float, minimum 2.0)
              */
             lifeExpectancy(age) {
-                if (age < 60) return 95 - age;
-                if (age < 70) return 90 - age;
-                if (age < 80) return 87 - age;
-                if (age < 90) return 94 - age;
-                return Math.max(2, 100 - age);
+                const table = this._lifeExpectancyTable;
+
+                // Clamp age to table bounds
+                if (age <= table[0].age) {
+                    return table[0].expectancy;
+                }
+                if (age >= table[table.length - 1].age) {
+                    return Math.max(2.0, table[table.length - 1].expectancy);
+                }
+
+                // Find the two table entries to interpolate between
+                for (let i = 0; i < table.length - 1; i++) {
+                    if (age >= table[i].age && age < table[i + 1].age) {
+                        const ageLow = table[i].age;
+                        const ageHigh = table[i + 1].age;
+                        const expLow = table[i].expectancy;
+                        const expHigh = table[i + 1].expectancy;
+
+                        // Linear interpolation
+                        const fraction = (age - ageLow) / (ageHigh - ageLow);
+                        const expectancy = expLow + fraction * (expHigh - expLow);
+
+                        return Math.max(2.0, expectancy);
+                    }
+                }
+
+                // Fallback (should never reach here)
+                return 2.0;
             },
 
             /**
@@ -1833,16 +2105,45 @@
             },
 
             /**
+             * Calculates periodic expense for a given year
+             * @param {number} yearIndex - Year index (0-based)
+             * @param {object} inputs - Input parameters
+             * @param {number} inflationMultiplier - Inflation multiplier
+             * @returns {number} Expense amount for this year (0 if not an expense year)
+             */
+            calculatePeriodicExpense(yearIndex, inputs, inflationMultiplier) {
+                if (!inputs.oneTimeExpense || inputs.oneTimeExpense <= 0) return 0;
+
+                const firstExpenseYear = (inputs.expenseFirstYear || 5) - 1; // Convert to 0-based
+                const frequency = inputs.expenseFrequency || 5;
+                const maxCount = inputs.expenseMaxCount || 0; // 0 = unlimited
+
+                // Check if this is an expense year
+                if (yearIndex < firstExpenseYear) return 0;
+
+                const yearsSinceFirst = yearIndex - firstExpenseYear;
+                if (yearsSinceFirst % frequency !== 0) return 0;
+
+                // Check max count limit
+                if (maxCount > 0) {
+                    const expenseNumber = Math.floor(yearsSinceFirst / frequency) + 1;
+                    if (expenseNumber > maxCount) return 0;
+                }
+
+                return inputs.oneTimeExpense * Math.pow(inflationMultiplier, yearIndex);
+            },
+
+            /**
              * STRATEGY 1: Constant Real Withdrawal (4% Rule)
-             * Withdraws the GREATER of: 4.5% of initial portfolio OR minSpending.
+             * Withdraws the GREATER of: configured rate of initial portfolio OR minSpending.
              * Amount is then inflation-adjusted each year to maintain purchasing power.
              */
             strategyConstantReal(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
-                const initialRate = 4.5; // 4.5% initial withdrawal rate
+                const initialRate = inputs.constantRealRate || 4.5;
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
 
-                // Use startingWithdrawal if specified, otherwise use 4.5% rule
+                // Use startingWithdrawal if specified, otherwise use configured rate
                 let baseWithdrawal;
                 if (inputs.startingWithdrawal && inputs.startingWithdrawal > 0) {
                     baseWithdrawal = inputs.startingWithdrawal;
@@ -1868,15 +2169,30 @@
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
 
+                    // If already ruined, no more withdrawals
+                    if (ruined) {
+                        const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
+                        portfolio *= (1 + returnPct);
+                        yearResults.push({
+                            year: i,
+                            age,
+                            portfolioStart,
+                            returnPct: returnPct * 100,
+                            withdrawal: 0,
+                            portfolioEnd: portfolio,
+                            ruined: true
+                        });
+                        continue;
+                    }
+
                     // Apply max spending cap (inflation-adjusted) if specified
                     if (baseMaxSpending > 0) {
                         const inflationAdjustedMaxSpending = baseMaxSpending * Math.pow(inflationMultiplier, i);
                         withdrawal = Math.min(withdrawal, inflationAdjustedMaxSpending);
                     }
 
-                    // One-time expense every 5 years (inflation-adjusted)
-                    const isExpenseYear = ((i + 1) % 5 === 0);
-                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+                    // Periodic expense (inflation-adjusted)
+                    const oneTimeExpenseThisYear = this.calculatePeriodicExpense(i, inputs, inflationMultiplier);
 
                     // Social Security reduces portfolio withdrawal needs (with COLA adjustment)
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
@@ -1888,14 +2204,12 @@
 
                     if (portfolio < 0) {
                         portfolio = 0;
-                        if (!ruined) {
-                            ruined = true;
-                            ruinAge = age;
-                        }
+                        ruined = true;
+                        ruinAge = age;
                     }
 
                     // Apply investment return
-                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
                     portfolio *= (1 + returnPct);
 
                     yearResults.push({
@@ -1928,12 +2242,12 @@
 
             /**
              * STRATEGY 2: Constant Percentage of Portfolio
-             * Withdraws 4% of current portfolio each year, but never less than minSpending.
+             * Withdraws configured % of current portfolio each year, but never less than minSpending.
              * Self-adjusting to market conditions while maintaining minimum lifestyle.
              */
             strategyConstantPercent(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
-                const withdrawalRate = 4.0; // 4% each year
+                const withdrawalRate = inputs.constantPctRate || 4.0;
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
                 const baseMinSpending = inputs.minSpending || 0;
                 const baseMaxSpending = inputs.maxSpending || 0;
@@ -1948,20 +2262,35 @@
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
 
+                    // If already ruined, no more withdrawals
+                    if (ruined) {
+                        const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
+                        portfolio *= (1 + returnPct);
+                        yearResults.push({
+                            year: i,
+                            age,
+                            portfolioStart,
+                            returnPct: returnPct * 100,
+                            withdrawal: 0,
+                            portfolioEnd: portfolio,
+                            ruined: true
+                        });
+                        continue;
+                    }
+
                     // Min/max spending grows with inflation to maintain purchasing power
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
                     const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
 
-                    // One-time expense every 5 years (inflation-adjusted)
-                    const isExpenseYear = ((i + 1) % 5 === 0);
-                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+                    // Periodic expense (inflation-adjusted)
+                    const oneTimeExpenseThisYear = this.calculatePeriodicExpense(i, inputs, inflationMultiplier);
 
                     // Social Security with COLA adjustment
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
                     const ss = (age >= inputs.ssStartAge) ? inputs.socialSecurity * Math.pow(inflationMultiplier, ssYearsReceiving) : 0;
 
-                    // Year 1: Use startingWithdrawal if specified, otherwise use 4% of portfolio
-                    // Years 2+: Use 4% of current portfolio (the strategy's natural behavior)
+                    // Year 1: Use startingWithdrawal if specified, otherwise use configured % of portfolio
+                    // Years 2+: Use configured % of current portfolio (the strategy's natural behavior)
                     let targetWithdrawal;
                     if (i === 0 && baseStartingWithdrawal > 0) {
                         targetWithdrawal = baseStartingWithdrawal;
@@ -1977,13 +2306,11 @@
 
                     if (portfolio < 0) {
                         portfolio = 0;
-                        if (!ruined) {
-                            ruined = true;
-                            ruinAge = age;
-                        }
+                        ruined = true;
+                        ruinAge = age;
                     }
 
-                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
                     portfolio *= (1 + returnPct);
 
                     yearResults.push({
@@ -2022,6 +2349,7 @@
                 const baseMinSpending = inputs.minSpending || 0;
                 const baseMaxSpending = inputs.maxSpending || 0;
                 const baseStartingWithdrawal = inputs.startingWithdrawal || 0;
+                const stockAllocation = inputs.vpwStockAllocation || 60;
 
                 let portfolio = inputs.startingPortfolio;
                 const yearResults = [];
@@ -2031,12 +2359,28 @@
                 for (let i = 0; i < years; i++) {
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
+
+                    // If already ruined, no more withdrawals
+                    if (ruined) {
+                        const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
+                        portfolio *= (1 + returnPct);
+                        yearResults.push({
+                            year: i,
+                            age,
+                            portfolioStart,
+                            returnPct: returnPct * 100,
+                            withdrawal: 0,
+                            portfolioEnd: portfolio,
+                            ruined: true
+                        });
+                        continue;
+                    }
+
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
                     const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
 
-                    // One-time expense every 5 years (inflation-adjusted)
-                    const isExpenseYear = ((i + 1) % 5 === 0);
-                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+                    // Periodic expense (inflation-adjusted)
+                    const oneTimeExpenseThisYear = this.calculatePeriodicExpense(i, inputs, inflationMultiplier);
 
                     // Social Security with COLA adjustment
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
@@ -2049,7 +2393,7 @@
                         targetWithdrawal = baseStartingWithdrawal;
                     } else {
                         const yearsRemaining = inputs.planningAge - age;
-                        const vpwPct = this.vpwPercentage(yearsRemaining, 60);
+                        const vpwPct = this.vpwPercentage(yearsRemaining, stockAllocation);
                         targetWithdrawal = portfolio * (vpwPct / 100);
                     }
                     // Apply min/max spending constraints
@@ -2061,13 +2405,11 @@
 
                     if (portfolio < 0) {
                         portfolio = 0;
-                        if (!ruined) {
-                            ruined = true;
-                            ruinAge = age;
-                        }
+                        ruined = true;
+                        ruinAge = age;
                     }
 
-                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
                     portfolio *= (1 + returnPct);
 
                     yearResults.push({
@@ -2098,22 +2440,24 @@
             /**
              * STRATEGY 4: Guardrails (Guyton-Klinger)
              * Adjusts spending when withdrawal rate crosses thresholds.
-             * Initial withdrawal is the greater of 5% of portfolio or minSpending.
+             * Initial withdrawal is the greater of configured rate of portfolio or minSpending.
              * Guardrails can adjust spending but never below minSpending floor.
              */
             strategyGuardrails(inputs, deterministic = false) {
                 const years = inputs.planningAge - inputs.retirementAge;
-                const initialRate = 5.0;
-                const upperGuardrail = initialRate * 1.20; // +20%
-                const lowerGuardrail = initialRate * 0.80; // -20%
-                const adjustmentFactor = 0.10; // 10% spending adjustment
+                const initialRate = inputs.guardrailsInitialRate || 5.0;
+                const upperMultiplier = inputs.guardrailsUpper || 1.2;
+                const lowerMultiplier = inputs.guardrailsLower || 0.8;
+                const upperGuardrail = initialRate * upperMultiplier;
+                const lowerGuardrail = initialRate * lowerMultiplier;
+                const adjustmentFactor = (inputs.guardrailsAdjustment || 10.0) / 100;
                 const inflationMultiplier = 1 + inputs.inflationRate / 100;
                 const baseMinSpending = inputs.minSpending || 0;
                 const baseMaxSpending = inputs.maxSpending || 0;
 
                 let portfolio = inputs.startingPortfolio;
 
-                // Use startingWithdrawal if specified, otherwise use 5% rule
+                // Use startingWithdrawal if specified, otherwise use configured rate
                 let baseWithdrawal;
                 if (inputs.startingWithdrawal && inputs.startingWithdrawal > 0) {
                     baseWithdrawal = inputs.startingWithdrawal;
@@ -2134,12 +2478,28 @@
                 for (let i = 0; i < years; i++) {
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
+
+                    // If already ruined, no more withdrawals
+                    if (ruined) {
+                        const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
+                        portfolio *= (1 + returnPct);
+                        yearResults.push({
+                            year: i,
+                            age,
+                            portfolioStart,
+                            returnPct: returnPct * 100,
+                            withdrawal: 0,
+                            portfolioEnd: portfolio,
+                            ruined: true
+                        });
+                        continue;
+                    }
+
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
                     const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
 
-                    // One-time expense every 5 years (inflation-adjusted)
-                    const isExpenseYear = ((i + 1) % 5 === 0);
-                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+                    // Periodic expense (inflation-adjusted)
+                    const oneTimeExpenseThisYear = this.calculatePeriodicExpense(i, inputs, inflationMultiplier);
 
                     // Social Security with COLA adjustment
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
@@ -2170,13 +2530,11 @@
 
                     if (portfolio < 0) {
                         portfolio = 0;
-                        if (!ruined) {
-                            ruined = true;
-                            ruinAge = age;
-                        }
+                        ruined = true;
+                        ruinAge = age;
                     }
 
-                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
                     portfolio *= (1 + returnPct);
 
                     yearResults.push({
@@ -2227,12 +2585,28 @@
                 for (let i = 0; i < years; i++) {
                     const age = inputs.retirementAge + i;
                     const portfolioStart = portfolio;
+
+                    // If already ruined, no more withdrawals
+                    if (ruined) {
+                        const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
+                        portfolio *= (1 + returnPct);
+                        yearResults.push({
+                            year: i,
+                            age,
+                            portfolioStart,
+                            returnPct: returnPct * 100,
+                            withdrawal: 0,
+                            portfolioEnd: portfolio,
+                            ruined: true
+                        });
+                        continue;
+                    }
+
                     const inflationAdjustedMinSpending = baseMinSpending * Math.pow(inflationMultiplier, i);
                     const inflationAdjustedMaxSpending = baseMaxSpending > 0 ? baseMaxSpending * Math.pow(inflationMultiplier, i) : Infinity;
 
-                    // One-time expense every 5 years (inflation-adjusted)
-                    const isExpenseYear = ((i + 1) % 5 === 0);
-                    const oneTimeExpenseThisYear = isExpenseYear ? inputs.oneTimeExpense * Math.pow(inflationMultiplier, i) : 0;
+                    // Periodic expense (inflation-adjusted)
+                    const oneTimeExpenseThisYear = this.calculatePeriodicExpense(i, inputs, inflationMultiplier);
 
                     // Social Security with COLA adjustment
                     const ssYearsReceiving = Math.max(0, age - inputs.ssStartAge);
@@ -2256,13 +2630,11 @@
 
                     if (portfolio < 0) {
                         portfolio = 0;
-                        if (!ruined) {
-                            ruined = true;
-                            ruinAge = age;
-                        }
+                        ruined = true;
+                        ruinAge = age;
                     }
 
-                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic);
+                    const returnPct = this.generateReturn(inputs.expectedReturn, inputs.volatility, deterministic, inputs.returnDistribution);
                     portfolio *= (1 + returnPct);
 
                     yearResults.push({
@@ -2314,7 +2686,22 @@
                 }
 
                 // Calculate aggregate statistics
-                const successRate = (paths.filter(p => !p.ruined).length / paths.length) * 100;
+                const failedPaths = paths.filter(p => p.ruined);
+                const successfulPaths = paths.filter(p => !p.ruined);
+                const successRate = (successfulPaths.length / paths.length) * 100;
+                const failureRate = (failedPaths.length / paths.length) * 100;
+
+                // Failure metrics
+                let avgFailureAge = null;
+                let avgFailureSeverity = null;
+                if (failedPaths.length > 0) {
+                    const failureAges = failedPaths.map(p => p.ruinAge);
+                    avgFailureAge = failureAges.reduce((sum, age) => sum + age, 0) / failureAges.length;
+
+                    // Severity = years of shortfall (planningAge - ruinAge)
+                    const severities = failedPaths.map(p => inputs.planningAge - p.ruinAge);
+                    avgFailureSeverity = severities.reduce((sum, s) => sum + s, 0) / severities.length;
+                }
 
                 const finalBalances = paths.map(p => p.finalBalance).sort((a, b) => a - b);
                 const totalWithdrawals = paths.map(p => p.totalWithdrawals).sort((a, b) => a - b);
@@ -2362,6 +2749,9 @@
                     name: strategyName,
                     paths,
                     successRate,
+                    failureRate,
+                    avgFailureAge,
+                    avgFailureSeverity,
                     medianFinal,
                     p10Final,
                     p75Final,
@@ -2888,6 +3278,12 @@
                 html += `<div>Median Final: <strong>${Charts.formatCurrency(strategy.medianFinal / finalDeflator)}</strong></div>`;
                 html += `<div>10th Percentile: <strong>${Charts.formatCurrency(strategy.p10Final / finalDeflator)}</strong></div>`;
                 html += `<div>Total Withdrawals: <strong>${Charts.formatCurrency(strategy.medianWithdrawals)}</strong></div>`;
+                // Failure metrics (only show if there are failures)
+                if (strategy.failureRate > 0) {
+                    html += `<div>Failure Rate: <strong class="text-red-400">${strategy.failureRate.toFixed(1)}%</strong></div>`;
+                    html += `<div>Avg Failure Age: <strong class="text-red-400">${strategy.avgFailureAge ? strategy.avgFailureAge.toFixed(0) : 'N/A'}</strong></div>`;
+                    html += `<div>Avg Shortfall: <strong class="text-red-400">${strategy.avgFailureSeverity ? strategy.avgFailureSeverity.toFixed(1) + ' yrs' : 'N/A'}</strong></div>`;
+                }
                 html += '</div>';
 
                 // Progress bar
@@ -2962,7 +3358,21 @@
                     socialSecurity: parseFormattedNumber(document.getElementById('social-security').value),
                     ssStartAge: parseInt(document.getElementById('ss-start-age').value),
                     targetSuccessRate: parseInt(document.getElementById('risk-tolerance').value),
-                    strategies: selectedStrategies
+                    strategies: selectedStrategies,
+                    // Strategy parameters
+                    constantRealRate: parseFloat(document.getElementById('constant-real-rate').value.replace(/,/g, '')) || 4.5,
+                    constantPctRate: parseFloat(document.getElementById('constant-pct-rate').value.replace(/,/g, '')) || 4.0,
+                    guardrailsInitialRate: parseFloat(document.getElementById('guardrails-initial-rate').value.replace(/,/g, '')) || 5.0,
+                    guardrailsUpper: parseFloat(document.getElementById('guardrails-upper').value.replace(/,/g, '')) || 1.2,
+                    guardrailsLower: parseFloat(document.getElementById('guardrails-lower').value.replace(/,/g, '')) || 0.8,
+                    guardrailsAdjustment: parseFloat(document.getElementById('guardrails-adjustment').value.replace(/,/g, '')) || 10.0,
+                    vpwStockAllocation: parseFloat(document.getElementById('vpw-stock-allocation').value.replace(/,/g, '')) || 60,
+                    // Return distribution model
+                    returnDistribution: document.getElementById('return-distribution').value || 'normal',
+                    // Periodic expense parameters
+                    expenseFirstYear: parseInt(document.getElementById('expense-first-year').value) || 5,
+                    expenseFrequency: parseInt(document.getElementById('expense-frequency').value) || 5,
+                    expenseMaxCount: parseInt(document.getElementById('expense-max-count').value) || 0
                 };
             },
 
@@ -3106,6 +3516,7 @@
                 html += '<tr>';
                 html += '<th class="px-4 py-3 text-left text-xs font-medium text-[#98989d] uppercase">Strategy</th>';
                 html += '<th class="px-4 py-3 text-left text-xs font-medium text-[#98989d] uppercase">Success Rate</th>';
+                html += '<th class="px-4 py-3 text-left text-xs font-medium text-[#98989d] uppercase">Avg Fail Age</th>';
                 html += '<th class="px-4 py-3 text-left text-xs font-medium text-[#98989d] uppercase">Median Final</th>';
                 html += '<th class="px-4 py-3 text-left text-xs font-medium text-[#98989d] uppercase">75th %ile Final</th>';
                 html += '<th class="px-4 py-3 text-left text-xs font-medium text-[#98989d] uppercase">90th %ile Final</th>';
@@ -3126,6 +3537,7 @@
                             <div class="progress-bar-animated bg-gradient-to-r from-primary-500 to-primary-600 h-1.5 rounded-full" style="width: ${s.successRate}%"></div>
                         </div>
                     </td>`;
+                    html += `<td class="px-4 py-3 text-sm font-mono ${s.avgFailureAge ? 'text-red-400' : 'text-[#636366]'}">${s.avgFailureAge ? s.avgFailureAge.toFixed(0) : '—'}</td>`;
                     html += `<td class="px-4 py-3 text-sm font-mono text-[#e5e5e7]">${Charts.formatCurrency(s.medianFinal / finalDeflator)}</td>`;
                     html += `<td class="px-4 py-3 text-sm font-mono text-[#e5e5e7]">${Charts.formatCurrency(s.p75Final / finalDeflator)}</td>`;
                     html += `<td class="px-4 py-3 text-sm font-mono text-[#e5e5e7]">${Charts.formatCurrency(s.p90Final / finalDeflator)}</td>`;
@@ -3522,6 +3934,21 @@
                 params.set('ssStartAge', inputs.ssStartAge);
                 params.set('targetSuccessRate', inputs.targetSuccessRate);
 
+                // Strategy parameters
+                params.set('constantRealRate', inputs.constantRealRate);
+                params.set('constantPctRate', inputs.constantPctRate);
+                params.set('guardrailsInitialRate', inputs.guardrailsInitialRate);
+                params.set('guardrailsUpper', inputs.guardrailsUpper);
+                params.set('guardrailsLower', inputs.guardrailsLower);
+                params.set('guardrailsAdjustment', inputs.guardrailsAdjustment);
+                params.set('vpwStockAllocation', inputs.vpwStockAllocation);
+
+                // Return distribution and expense parameters
+                params.set('returnDistribution', inputs.returnDistribution);
+                params.set('expenseFirstYear', inputs.expenseFirstYear);
+                params.set('expenseFrequency', inputs.expenseFrequency);
+                params.set('expenseMaxCount', inputs.expenseMaxCount);
+
                 // Add strategies as comma-separated list
                 if (inputs.strategies.length > 0) {
                     params.set('strategies', inputs.strategies.join(','));
@@ -3585,7 +4012,21 @@
                     'oneTimeExpense': { id: 'one-time-expense', type: 'currency' },
                     'socialSecurity': { id: 'social-security', type: 'currency' },
                     'ssStartAge': { id: 'ss-start-age', type: 'number' },
-                    'targetSuccessRate': { id: 'risk-tolerance', type: 'number' }
+                    'targetSuccessRate': { id: 'risk-tolerance', type: 'number' },
+                    // Strategy parameters
+                    'constantRealRate': { id: 'constant-real-rate', type: 'percent' },
+                    'constantPctRate': { id: 'constant-pct-rate', type: 'percent' },
+                    'guardrailsInitialRate': { id: 'guardrails-initial-rate', type: 'percent' },
+                    'guardrailsUpper': { id: 'guardrails-upper', type: 'percent' },
+                    'guardrailsLower': { id: 'guardrails-lower', type: 'percent' },
+                    'guardrailsAdjustment': { id: 'guardrails-adjustment', type: 'percent' },
+                    'vpwStockAllocation': { id: 'vpw-stock-allocation', type: 'number' },
+                    // Return distribution
+                    'returnDistribution': { id: 'return-distribution', type: 'select' },
+                    // Expense parameters
+                    'expenseFirstYear': { id: 'expense-first-year', type: 'number' },
+                    'expenseFrequency': { id: 'expense-frequency', type: 'number' },
+                    'expenseMaxCount': { id: 'expense-max-count', type: 'number' }
                 };
 
                 // Apply each parameter to its corresponding input

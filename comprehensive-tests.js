@@ -127,12 +127,41 @@ const Simulation = {
         return (mean + z * volatility) / 100;
     },
 
+    // IRS Uniform Lifetime Table - Life Expectancy by Age
+    _lifeExpectancyTable: [
+        { age: 20, expectancy: 63.0 },
+        { age: 30, expectancy: 53.3 },
+        { age: 40, expectancy: 43.6 },
+        { age: 50, expectancy: 34.2 },
+        { age: 55, expectancy: 29.6 },
+        { age: 60, expectancy: 25.2 },
+        { age: 65, expectancy: 21.0 },
+        { age: 70, expectancy: 17.0 },
+        { age: 72, expectancy: 15.5 },
+        { age: 75, expectancy: 13.4 },
+        { age: 80, expectancy: 10.2 },
+        { age: 85, expectancy: 7.6 },
+        { age: 90, expectancy: 5.3 },
+        { age: 95, expectancy: 3.7 },
+        { age: 100, expectancy: 2.7 },
+        { age: 105, expectancy: 2.2 },
+        { age: 110, expectancy: 2.0 },
+        { age: 120, expectancy: 2.0 }
+    ],
+
     lifeExpectancy(age) {
-        if (age < 60) return 95 - age;
-        if (age < 70) return 90 - age;
-        if (age < 80) return 87 - age;
-        if (age < 90) return 94 - age;
-        return Math.max(2, 100 - age);
+        const table = this._lifeExpectancyTable;
+        if (age <= table[0].age) return table[0].expectancy;
+        if (age >= table[table.length - 1].age) return Math.max(2.0, table[table.length - 1].expectancy);
+
+        for (let i = 0; i < table.length - 1; i++) {
+            if (age >= table[i].age && age < table[i + 1].age) {
+                const fraction = (age - table[i].age) / (table[i + 1].age - table[i].age);
+                const expectancy = table[i].expectancy + fraction * (table[i + 1].expectancy - table[i].expectancy);
+                return Math.max(2.0, expectancy);
+            }
+        }
+        return 2.0;
     },
 
     vpwPercentage(yearsRemaining, stockAllocation = 60) {
