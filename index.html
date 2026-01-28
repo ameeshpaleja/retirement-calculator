@@ -320,15 +320,16 @@
 
         /* Staggered entrance animations - more dramatic */
         .stagger-item {
-            opacity: 0;
-            animation: popIn 0.6s var(--spring) forwards;
+            opacity: 1; /* Fallback - visible by default */
+            -webkit-animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
-        .stagger-item:nth-child(1) { animation-delay: 0.05s; }
-        .stagger-item:nth-child(2) { animation-delay: 0.12s; }
-        .stagger-item:nth-child(3) { animation-delay: 0.19s; }
-        .stagger-item:nth-child(4) { animation-delay: 0.26s; }
-        .stagger-item:nth-child(5) { animation-delay: 0.33s; }
-        .stagger-item:nth-child(6) { animation-delay: 0.4s; }
+        .stagger-item:nth-child(1) { -webkit-animation-delay: 0.05s; animation-delay: 0.05s; }
+        .stagger-item:nth-child(2) { -webkit-animation-delay: 0.12s; animation-delay: 0.12s; }
+        .stagger-item:nth-child(3) { -webkit-animation-delay: 0.19s; animation-delay: 0.19s; }
+        .stagger-item:nth-child(4) { -webkit-animation-delay: 0.26s; animation-delay: 0.26s; }
+        .stagger-item:nth-child(5) { -webkit-animation-delay: 0.33s; animation-delay: 0.33s; }
+        .stagger-item:nth-child(6) { -webkit-animation-delay: 0.4s; animation-delay: 0.4s; }
 
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         .animate-fade-in-up { animation: fadeInUp 0.5s var(--smooth); }
@@ -346,15 +347,17 @@
            With playful hover interactions
            ============================================ */
         .glass-card {
-            background: rgba(44, 44, 46, 0.8);
-            backdrop-filter: blur(20px);
+            background: #2c2c2e; /* Solid fallback for iOS */
+            background: rgba(44, 44, 46, 0.95);
             -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 18px;
             box-shadow:
                 0 2px 20px rgba(0, 0, 0, 0.3),
                 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: all 0.4s var(--spring);
+            -webkit-transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             transform-origin: center center;
         }
 
@@ -1455,15 +1458,10 @@
                  ASSUMPTIONS PANEL - SHOWN INITIALLY
                  ============================================ -->
             <div id="assumptions-panel" class="animate-fade-in">
-                <div class="max-w-2xl mx-auto relative">
-
-                    <!-- Floating decorative orbs -->
-                    <div class="floating-orb floating-orb-1"></div>
-                    <div class="floating-orb floating-orb-2"></div>
-                    <div class="floating-orb floating-orb-3"></div>
+                <div class="max-w-2xl mx-auto">
 
                     <!-- Hero Section - Apple Style with animations -->
-                    <div class="text-center mb-12 sm:mb-16 relative z-10">
+                    <div class="text-center mb-12 sm:mb-16">
                         <h2 class="text-4xl sm:text-5xl font-bold text-apple-text mb-4 tracking-tight leading-tight animate-fade-in-up" style="animation-delay: 0.1s">
                             Plan your retirement<br class="hidden sm:block">
                             <span class="gradient-text">with confidence.</span>
