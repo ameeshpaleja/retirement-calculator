@@ -451,6 +451,11 @@
         }
         input[type="number"] { -moz-appearance: textfield; }
 
+        /* Inputs with prefix symbols (like $) need more left padding */
+        input.pl-8 {
+            padding-left: 2.5rem !important;
+        }
+
         /* Labels */
         label {
             color: var(--text-primary) !important;
