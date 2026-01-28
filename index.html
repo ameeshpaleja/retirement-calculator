@@ -209,26 +209,65 @@
         }
 
         /* ============================================
-           ANIMATIONS - Smooth Apple-style
+           ANIMATIONS - Playful & Delightful
+           Springy, bouncy, alive!
            ============================================ */
+
+        /* Spring easing for that satisfying bounce */
+        :root {
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --spring-soft: cubic-bezier(0.25, 1.25, 0.5, 1);
+            --smooth: cubic-bezier(0.16, 1, 0.3, 1);
+            --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.96); }
+            from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
         }
 
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+            60% { opacity: 1; transform: scale(1.02) translateY(-2px); }
+            100% { transform: scale(1) translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-3deg); }
+            75% { transform: rotate(3deg); }
+        }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
         }
 
         @keyframes shimmer {
@@ -236,23 +275,75 @@
             100% { background-position: 200% 0; }
         }
 
-        /* Staggered entrance animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-6px) rotate(1deg); }
+            75% { transform: translateY(6px) rotate(-1deg); }
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(10, 132, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(10, 132, 255, 0.5); }
+        }
+
+        @keyframes numberPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.4); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(48, 209, 88, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Staggered entrance animations - more dramatic */
         .stagger-item {
             opacity: 0;
-            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: popIn 0.6s var(--spring) forwards;
         }
         .stagger-item:nth-child(1) { animation-delay: 0.05s; }
-        .stagger-item:nth-child(2) { animation-delay: 0.1s; }
-        .stagger-item:nth-child(3) { animation-delay: 0.15s; }
-        .stagger-item:nth-child(4) { animation-delay: 0.2s; }
-        .stagger-item:nth-child(5) { animation-delay: 0.25s; }
+        .stagger-item:nth-child(2) { animation-delay: 0.12s; }
+        .stagger-item:nth-child(3) { animation-delay: 0.19s; }
+        .stagger-item:nth-child(4) { animation-delay: 0.26s; }
+        .stagger-item:nth-child(5) { animation-delay: 0.33s; }
+        .stagger-item:nth-child(6) { animation-delay: 0.4s; }
 
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-        .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        .animate-fade-in-scale { animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .animate-fade-in-up { animation: fadeInUp 0.5s var(--smooth); }
+        .animate-fade-in-scale { animation: fadeInScale 0.4s var(--spring); }
+        .animate-bounce-in { animation: bounceIn 0.6s var(--spring); }
+        .animate-pop-in { animation: popIn 0.5s var(--spring); }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-breathe { animation: breathe 3s ease-in-out infinite; }
+        .animate-glow { animation: glow 2s ease-in-out infinite; }
+        .animate-wiggle:hover { animation: wiggle 0.3s ease-in-out; }
+        .animate-spin { animation: spin 1s linear infinite; }
 
         /* ============================================
            GLASS CARDS - Dark mode frosted glass effect
+           With playful hover interactions
            ============================================ */
         .glass-card {
             background: rgba(44, 44, 46, 0.8);
@@ -263,14 +354,22 @@
             box-shadow:
                 0 2px 20px rgba(0, 0, 0, 0.3),
                 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.4s var(--spring);
+            transform-origin: center center;
         }
 
         .glass-card:hover {
+            transform: translateY(-4px) scale(1.01);
             box-shadow:
-                0 8px 40px rgba(0, 0, 0, 0.4),
-                0 2px 8px rgba(0, 0, 0, 0.3);
-            border-color: rgba(255, 255, 255, 0.15);
+                0 20px 50px rgba(0, 0, 0, 0.5),
+                0 8px 20px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-card:active {
+            transform: translateY(-2px) scale(0.99);
+            transition: all 0.1s ease;
         }
 
         .glass-card-elevated {
@@ -278,10 +377,16 @@
             border: 1px solid var(--apple-border-light);
             border-radius: 18px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s var(--spring);
+        }
+
+        .glass-card-elevated:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
         }
 
         /* ============================================
-           FORM INPUTS - Apple DARK MODE style
+           FORM INPUTS - Playful interactions
            ============================================ */
         input[type="text"],
         input[type="number"],
@@ -293,18 +398,32 @@
             font-family: inherit !important;
             font-size: 17px;
             padding: 12px 16px !important;
-            transition: all 0.2s ease;
+            transition: all 0.3s var(--spring);
             -webkit-appearance: none;
             appearance: none;
             min-height: 48px;
+        }
+
+        input[type="text"]:hover,
+        input[type="number"]:hover,
+        select:hover {
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
         }
 
         input[type="text"]:focus,
         input[type="number"]:focus,
         select:focus {
             border-color: var(--apple-blue) !important;
-            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.25) !important;
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.25), 0 4px 20px rgba(10, 132, 255, 0.15) !important;
             outline: none !important;
+            transform: translateY(-1px);
+        }
+
+        /* Value change animation */
+        input.value-changed {
+            animation: numberPop 0.3s var(--spring);
         }
 
         input::placeholder {
@@ -341,57 +460,89 @@
         }
 
         /* ============================================
-           BUTTONS - Apple style
+           BUTTONS - Playful & Bouncy
            ============================================ */
         .btn-apple {
-            background: var(--apple-blue);
+            background: linear-gradient(135deg, var(--apple-blue) 0%, #0066cc 100%);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 16px 32px;
             font-size: 17px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s var(--spring);
             min-height: 54px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+        }
+
+        .btn-apple::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .btn-apple:hover {
-            background: var(--apple-blue-hover);
-            transform: scale(1.02);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(10, 132, 255, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset;
+        }
+
+        .btn-apple:hover::before {
+            opacity: 1;
         }
 
         .btn-apple:active {
-            transform: scale(0.98);
+            transform: translateY(-1px) scale(0.98);
+            transition: all 0.1s ease;
+        }
+
+        /* Ripple effect on click */
+        .btn-apple .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            animation: ripple 0.6s ease-out;
+            pointer-events: none;
         }
 
         .btn-apple-secondary {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             color: var(--text-primary);
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: none;
         }
 
         .btn-apple-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .btn-apple-outline {
             background: transparent;
             color: var(--apple-blue);
-            border: 1.5px solid var(--apple-blue);
+            border: 2px solid var(--apple-blue);
+            box-shadow: none;
         }
 
         .btn-apple-outline:hover {
-            background: var(--apple-blue-light);
+            background: rgba(10, 132, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(10, 132, 255, 0.2);
         }
 
         /* ============================================
-           TAB BAR - Apple segmented control style
+           TAB BAR - Animated segmented control
            ============================================ */
         .tab-button {
             background: transparent;
@@ -402,25 +553,51 @@
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s var(--spring);
             position: relative;
             min-height: 44px;
-            border-radius: 8px;
+            border-radius: 10px;
+        }
+
+        .tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--apple-blue);
+            transition: all 0.3s var(--spring);
+            transform: translateX(-50%);
+            border-radius: 1px;
         }
 
         .tab-button:hover {
             color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .tab-button:hover::after {
+            width: 20px;
         }
 
         .tab-button[aria-selected="true"],
         .tab-button.active {
             color: var(--apple-blue);
-            background: var(--apple-blue-light);
+            background: rgba(10, 132, 255, 0.15);
+            transform: scale(1.02);
+        }
+
+        .tab-button[aria-selected="true"]::after,
+        .tab-button.active::after {
+            width: 100%;
+            left: 0;
+            transform: none;
         }
 
         .tab-content {
-            transition: opacity 0.3s ease;
+            transition: all 0.4s var(--smooth);
         }
 
         .tab-content.hidden {
@@ -429,37 +606,55 @@
             display: none;
         }
 
+        .tab-content:not(.hidden) {
+            animation: fadeInUp 0.4s var(--smooth);
+        }
+
         /* ============================================
-           CHECKBOXES - Apple style
+           CHECKBOXES - Bouncy & Satisfying
            ============================================ */
         input[type="checkbox"] {
             -webkit-appearance: none;
             appearance: none;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border: 2px solid var(--apple-border);
-            border-radius: 6px;
+            border-radius: 7px;
             background: var(--apple-elevated);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s var(--spring);
             position: relative;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: var(--apple-blue);
+            transform: scale(1.05);
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.1);
         }
 
         input[type="checkbox"]:checked {
             background: var(--apple-blue);
             border-color: var(--apple-blue);
+            animation: bounceIn 0.4s var(--spring);
         }
 
         input[type="checkbox"]:checked::after {
             content: '';
             position: absolute;
-            left: 6px;
-            top: 2px;
+            left: 7px;
+            top: 3px;
             width: 6px;
             height: 12px;
             border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
+            border-width: 0 2.5px 2.5px 0;
+            transform: rotate(45deg) scale(0);
+            animation: checkPop 0.3s var(--spring) 0.1s forwards;
+        }
+
+        @keyframes checkPop {
+            0% { transform: rotate(45deg) scale(0); }
+            50% { transform: rotate(45deg) scale(1.2); }
+            100% { transform: rotate(45deg) scale(1); }
         }
 
         input[type="checkbox"]:focus {
@@ -505,7 +700,7 @@
             color: var(--apple-blue);
         }
 
-        /* Tippy.js theme */
+        /* Tippy.js theme - with animation */
         .tippy-box[data-theme~='custom'] {
             background: var(--text-primary);
             color: white;
@@ -513,10 +708,22 @@
             font-family: inherit;
             font-size: 13px;
             padding: 4px 8px;
+            animation: tooltipPop 0.3s var(--spring);
         }
 
         .tippy-box[data-theme~='custom'] .tippy-arrow {
             color: var(--text-primary);
+        }
+
+        @keyframes tooltipPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         /* ============================================
@@ -535,21 +742,26 @@
         }
 
         .noUi-handle {
-            width: 24px !important;
-            height: 24px !important;
-            right: -12px !important;
-            top: -10px !important;
-            background: var(--apple-blue);
+            width: 26px !important;
+            height: 26px !important;
+            right: -13px !important;
+            top: -11px !important;
+            background: linear-gradient(135deg, var(--apple-blue) 0%, #0066cc 100%);
             border: none;
             border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(10, 132, 255, 0.4);
+            cursor: grab;
+            transition: all 0.3s var(--spring);
         }
 
         .noUi-handle:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 20px rgba(10, 132, 255, 0.5);
+        }
+
+        .noUi-handle:active {
+            cursor: grabbing;
             transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4);
         }
 
         .noUi-handle::before,
@@ -629,50 +841,463 @@
         }
 
         /* ============================================
-           HISTOGRAM BARS
+           HISTOGRAM BARS - Animated
            ============================================ */
         .histogram-bar {
-            transition: all 0.2s ease;
-            border-radius: 4px;
+            transition: all 0.3s var(--spring);
+            border-radius: 6px;
         }
 
         .histogram-bar:hover {
-            filter: brightness(1.1);
+            filter: brightness(1.2);
+            transform: scaleY(1.05);
+            transform-origin: bottom;
         }
 
         /* ============================================
-           CELEBRATIONS
+           CELEBRATIONS - Spectacular!
            ============================================ */
         .confetti-piece {
             position: fixed;
-            width: 8px;
-            height: 8px;
-            top: 0;
-            animation: confetti 3s ease-out forwards;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confettiFall 4s ease-out forwards;
             z-index: 9999;
             pointer-events: none;
-            border-radius: 2px;
         }
 
-        @keyframes confetti {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        .confetti-piece:nth-child(odd) {
+            animation-name: confettiFallSpin;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0);
+                opacity: 1;
+            }
+            10% {
+                transform: translateY(10vh) rotate(90deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes confettiFallSpin {
+            0% {
+                transform: translateY(0) rotate(0deg) rotateY(0deg) scale(0);
+                opacity: 1;
+            }
+            10% {
+                transform: translateY(10vh) rotate(90deg) rotateY(180deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(1080deg) rotateY(1080deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* Success burst effect */
+        .success-burst {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 200px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        .success-burst::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(48, 209, 88, 0.4) 0%, transparent 70%);
+            animation: burstPulse 0.8s ease-out forwards;
+        }
+
+        @keyframes burstPulse {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
         }
 
         /* ============================================
-           PROGRESS BAR
+           PROGRESS BAR - Animated
            ============================================ */
         .progress-bar {
             background: var(--apple-border-light);
-            border-radius: 4px;
+            border-radius: 6px;
             height: 8px;
             overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255,255,255,0.1) 50%,
+                transparent 100%
+            );
+            animation: shimmer 1.5s infinite;
+            background-size: 200% 100%;
         }
 
         .progress-bar-fill {
             height: 100%;
-            border-radius: 4px;
-            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--apple-blue) 0%, #40c8ff 100%);
+            transition: width 0.8s var(--spring);
+            position: relative;
+        }
+
+        /* ============================================
+           LOADING SPINNER - Fun!
+           ============================================ */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--apple-border);
+            border-top-color: var(--apple-blue);
+            border-radius: 50%;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--apple-blue);
+            border-radius: 50%;
+            animation: loadingDot 1.4s ease-in-out infinite;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: 0s; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes loadingDot {
+            0%, 80%, 100% {
+                transform: scale(0.6);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* ============================================
+           SPARKLE EFFECTS
+           ============================================ */
+        .sparkle {
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            animation: sparkle 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes sparkle {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Floating orbs for hero section */
+        .floating-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.5;
+            animation: floatOrb 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .floating-orb-1 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.3) 0%, transparent 70%);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .floating-orb-2 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(48, 209, 88, 0.25) 0%, transparent 70%);
+            bottom: 20%;
+            left: -50px;
+            animation-delay: -3s;
+        }
+
+        .floating-orb-3 {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(191, 90, 242, 0.2) 0%, transparent 70%);
+            top: 40%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(20px, -20px) scale(1.05);
+            }
+            50% {
+                transform: translate(-10px, 10px) scale(0.95);
+            }
+            75% {
+                transform: translate(-20px, -10px) scale(1.02);
+            }
+        }
+
+        /* Animated gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, var(--apple-blue) 0%, #bf5af2 50%, var(--apple-blue) 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+        }
+
+        /* Typing cursor effect */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+            color: var(--apple-blue);
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Counting number animation */
+        .count-up {
+            display: inline-block;
+            animation: countReveal 0.8s var(--spring) forwards;
+        }
+
+        @keyframes countReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.8);
+                filter: blur(10px);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(-5px) scale(1.05);
+                filter: blur(0);
+            }
+            100% {
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Success burst ring */
+        .success-ring {
+            position: absolute;
+            inset: -20px;
+            border: 3px solid var(--apple-green);
+            border-radius: inherit;
+            animation: ringExpand 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes ringExpand {
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* Pulse ring for run button */
+        .btn-pulse-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            border: 2px solid var(--apple-blue);
+            animation: pulseRing 2s ease-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.15);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Shimmer effect for buttons */
+        .btn-shimmer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: btnShimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes btnShimmer {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        /* Result card reveal */
+        .result-card-reveal {
+            animation: resultCardReveal 0.6s var(--spring) forwards;
+        }
+
+        @keyframes resultCardReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Percentage fill animation */
+        .percentage-fill {
+            animation: fillGrow 1s var(--smooth) forwards;
+        }
+
+        @keyframes fillGrow {
+            0% {
+                width: 0;
+            }
+        }
+
+        /* Bounce attention animation */
+        .attention-bounce {
+            animation: attentionBounce 0.6s var(--spring);
+        }
+
+        @keyframes attentionBounce {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-8px); }
+            50% { transform: translateY(4px); }
+            75% { transform: translateY(-4px); }
+        }
+
+        /* Icon spin on hover */
+        .icon-spin-hover:hover svg {
+            animation: iconSpin 0.6s var(--spring);
+        }
+
+        @keyframes iconSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Shake for errors */
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* Jelly hover effect */
+        .jelly-hover:hover {
+            animation: jelly 0.5s ease;
+        }
+
+        @keyframes jelly {
+            0%, 100% { transform: scale(1, 1); }
+            25% { transform: scale(0.95, 1.05); }
+            50% { transform: scale(1.05, 0.95); }
+            75% { transform: scale(0.97, 1.03); }
+        }
+
+        /* ============================================
+           HOVER LIFT EFFECT
+           ============================================ */
+        .hover-lift {
+            transition: all 0.3s var(--spring);
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ============================================
+           NUMBER ANIMATION CLASS
+           ============================================ */
+        .number-animate {
+            display: inline-block;
+            transition: all 0.3s var(--spring);
+        }
+
+        .number-animate.updating {
+            animation: numberPop 0.4s var(--spring);
+        }
+
+        /* ============================================
+           TOOLTIP ANIMATION
+           ============================================ */
+        .tooltip-animated {
+            animation: popIn 0.2s var(--spring);
         }
 
         /* ============================================
@@ -817,14 +1442,20 @@
                  ASSUMPTIONS PANEL - SHOWN INITIALLY
                  ============================================ -->
             <div id="assumptions-panel" class="animate-fade-in">
-                <div class="max-w-2xl mx-auto">
+                <div class="max-w-2xl mx-auto relative">
 
-                    <!-- Hero Section - Apple Style -->
-                    <div class="text-center mb-12 sm:mb-16">
-                        <h2 class="text-4xl sm:text-5xl font-bold text-apple-text mb-4 tracking-tight leading-tight">
-                            Plan your retirement<br class="hidden sm:block"> with confidence.
+                    <!-- Floating decorative orbs -->
+                    <div class="floating-orb floating-orb-1"></div>
+                    <div class="floating-orb floating-orb-2"></div>
+                    <div class="floating-orb floating-orb-3"></div>
+
+                    <!-- Hero Section - Apple Style with animations -->
+                    <div class="text-center mb-12 sm:mb-16 relative z-10">
+                        <h2 class="text-4xl sm:text-5xl font-bold text-apple-text mb-4 tracking-tight leading-tight animate-fade-in-up" style="animation-delay: 0.1s">
+                            Plan your retirement<br class="hidden sm:block">
+                            <span class="gradient-text">with confidence.</span>
                         </h2>
-                        <p class="text-lg sm:text-xl text-apple-textSecondary max-w-xl mx-auto leading-relaxed">
+                        <p class="text-lg sm:text-xl text-apple-textSecondary max-w-xl mx-auto leading-relaxed animate-fade-in-up" style="animation-delay: 0.3s; animation-fill-mode: both">
                             See how different withdrawal strategies perform across 10,000 market scenarios.
                         </p>
                     </div>
@@ -927,32 +1558,32 @@
                         </h3>
                         <p class="text-sm text-apple-textSecondary mb-6">Choose your risk tolerance</p>
 
-                        <!-- Investment Style Presets - Apple Style -->
+                        <!-- Investment Style Presets - Apple Style with animations -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                            <button type="button" class="investment-preset p-5 bg-apple-surface border-2 border-apple-border rounded-2xl hover:border-apple-blue hover:shadow-lg transition-all text-left group" data-return="4" data-volatility="10">
-                                <div class="w-10 h-10 rounded-full bg-apple-green/10 flex items-center justify-center mb-3">
-                                    <svg class="w-5 h-5 text-apple-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            <button type="button" class="investment-preset p-5 bg-apple-surface border-2 border-apple-border rounded-2xl hover:border-apple-green hover:shadow-lg hover:-translate-y-1 transition-all text-left group jelly-hover" data-return="4" data-volatility="10">
+                                <div class="w-10 h-10 rounded-full bg-apple-green/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-apple-green group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                                 </div>
                                 <div class="font-semibold text-apple-text mb-1">Conservative</div>
                                 <p class="text-sm text-apple-textSecondary leading-relaxed mb-2">Lower risk, steady growth</p>
                                 <p class="text-xs text-apple-textTertiary">4% return · 10% volatility</p>
                             </button>
 
-                            <button type="button" class="investment-preset p-5 bg-apple-surface border-2 border-apple-blue rounded-2xl shadow-lg transition-all text-left selected" data-return="5" data-volatility="12">
+                            <button type="button" class="investment-preset p-5 bg-apple-surface border-2 border-apple-blue rounded-2xl shadow-lg transition-all text-left selected animate-glow jelly-hover" data-return="5" data-volatility="12">
                                 <div class="flex items-center justify-between mb-3">
-                                    <div class="w-10 h-10 rounded-full bg-apple-blue/10 flex items-center justify-center">
+                                    <div class="w-10 h-10 rounded-full bg-apple-blue/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                                         <svg class="w-5 h-5 text-apple-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
                                     </div>
-                                    <span class="text-xs font-medium text-apple-blue bg-apple-blueLight px-2.5 py-1 rounded-full">Recommended</span>
+                                    <span class="text-xs font-medium text-apple-blue bg-apple-blueLight px-2.5 py-1 rounded-full animate-pulse">Recommended</span>
                                 </div>
                                 <div class="font-semibold text-apple-text mb-1">Balanced</div>
                                 <p class="text-sm text-apple-textSecondary leading-relaxed mb-2">Optimal risk-reward balance</p>
                                 <p class="text-xs text-apple-textTertiary">5% return · 12% volatility</p>
                             </button>
 
-                            <button type="button" class="investment-preset p-5 bg-apple-surface border-2 border-apple-border rounded-2xl hover:border-apple-orange hover:shadow-lg transition-all text-left group" data-return="6" data-volatility="15">
-                                <div class="w-10 h-10 rounded-full bg-apple-orange/10 flex items-center justify-center mb-3">
-                                    <svg class="w-5 h-5 text-apple-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                            <button type="button" class="investment-preset p-5 bg-apple-surface border-2 border-apple-border rounded-2xl hover:border-apple-orange hover:shadow-lg hover:-translate-y-1 transition-all text-left group jelly-hover" data-return="6" data-volatility="15">
+                                <div class="w-10 h-10 rounded-full bg-apple-orange/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-apple-orange group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                                 </div>
                                 <div class="font-semibold text-apple-text mb-1">Aggressive</div>
                                 <p class="text-sm text-apple-textSecondary leading-relaxed mb-2">Higher risk, maximum growth</p>
@@ -1202,54 +1833,54 @@
                         <p class="text-sm text-apple-textSecondary mb-6">Select strategies to compare</p>
 
                         <div class="space-y-3">
-                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-blue hover:shadow-md cursor-pointer transition-all">
+                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-green hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all group">
                                 <input type="checkbox" id="strategy-constant-real" checked class="mt-1 mr-4">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-semibold text-apple-text">4% Rule</span>
+                                        <span class="font-semibold text-apple-text group-hover:text-apple-green transition-colors">4% Rule</span>
                                         <span class="text-xs font-medium text-apple-green bg-apple-greenLight px-2 py-0.5 rounded-full">Classic</span>
                                     </div>
                                     <p class="text-sm text-apple-textSecondary">Withdraw 4% initially, adjust for inflation each year</p>
                                 </div>
                             </label>
 
-                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-blue hover:shadow-md cursor-pointer transition-all">
+                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-blue hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all group">
                                 <input type="checkbox" id="strategy-constant-pct" checked class="mt-1 mr-4">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-semibold text-apple-text">Constant %</span>
+                                        <span class="font-semibold text-apple-text group-hover:text-apple-blue transition-colors">Constant %</span>
                                         <span class="text-xs font-medium text-apple-blue bg-apple-blueLight px-2 py-0.5 rounded-full">Flexible</span>
                                     </div>
                                     <p class="text-sm text-apple-textSecondary">Withdraw fixed percentage of current balance each year</p>
                                 </div>
                             </label>
 
-                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-blue hover:shadow-md cursor-pointer transition-all">
+                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-orange hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all group">
                                 <input type="checkbox" id="strategy-guardrails" checked class="mt-1 mr-4">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-semibold text-apple-text">Guardrails</span>
+                                        <span class="font-semibold text-apple-text group-hover:text-apple-orange transition-colors">Guardrails</span>
                                         <span class="text-xs font-medium text-apple-orange bg-apple-orangeLight px-2 py-0.5 rounded-full">Adaptive</span>
                                     </div>
                                     <p class="text-sm text-apple-textSecondary">4% rule with automatic adjustments based on portfolio performance</p>
                                 </div>
                             </label>
 
-                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-blue hover:shadow-md cursor-pointer transition-all">
+                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-purple-500 hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all group">
                                 <input type="checkbox" id="strategy-vpw" class="mt-1 mr-4">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-semibold text-apple-text">Variable Percentage</span>
+                                        <span class="font-semibold text-apple-text group-hover:text-purple-400 transition-colors">Variable Percentage</span>
                                     </div>
                                     <p class="text-sm text-apple-textSecondary">Adjusts withdrawal rate based on remaining life expectancy</p>
                                 </div>
                             </label>
 
-                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-apple-blue hover:shadow-md cursor-pointer transition-all">
+                            <label class="flex items-start p-4 bg-apple-surface border border-apple-border rounded-xl hover:border-cyan-500 hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all group">
                                 <input type="checkbox" id="strategy-rmd" class="mt-1 mr-4">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-semibold text-apple-text">RMD Style</span>
+                                        <span class="font-semibold text-apple-text group-hover:text-cyan-400 transition-colors">RMD Style</span>
                                     </div>
                                     <p class="text-sm text-apple-textSecondary">Based on IRS Required Minimum Distribution methodology</p>
                                 </div>
@@ -1257,13 +1888,17 @@
                         </div>
                     </div>
 
-                    <!-- Run Button - Apple Style -->
+                    <!-- Run Button - Apple Style with animations -->
                     <div class="mt-8 mb-6">
                         <div class="flex flex-col items-center gap-4">
                             <button id="run-simulation"
-                                class="btn-apple w-full sm:w-auto py-4 px-12 text-lg"
+                                class="btn-apple btn-shimmer w-full sm:w-auto py-4 px-12 text-lg relative group jelly-hover"
                                 aria-describedby="simulation-description">
-                                Run Simulation
+                                <span class="btn-pulse-ring"></span>
+                                <span class="relative z-10 flex items-center gap-3">
+                                    <svg class="w-5 h-5 group-hover:animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Run Simulation
+                                </span>
                             </button>
 
                             <div class="flex flex-wrap items-center justify-center gap-4 mt-2">
@@ -1356,15 +1991,18 @@
 
         </main>
 
-        <!-- Apple-style Footer -->
+        <!-- Apple-style Footer with subtle animation -->
         <footer class="bg-apple-surface border-t border-apple-borderLight mt-auto">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-apple-textSecondary">
-                    <div>
+                    <div class="flex items-center gap-2">
+                        <span class="animate-float" style="animation-duration: 3s">📊</span>
                         Monte Carlo Retirement Simulator
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 hover:text-apple-blue transition-colors cursor-default">
                         <span>Built for financial planning</span>
+                        <span class="text-apple-textTertiary">•</span>
+                        <span class="text-xs text-apple-textTertiary">10,000 simulations per run</span>
                     </div>
                 </div>
             </div>
@@ -3293,7 +3931,15 @@
                 const btn = document.getElementById('run-simulation');
                 const originalText = btn.innerHTML;
                 btn.disabled = true;
-                btn.innerHTML = '<svg class="inline w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Running simulations...';
+                btn.classList.add('animate-pulse');
+                btn.innerHTML = `
+                    <span class="relative z-10 flex items-center gap-3">
+                        <div class="loading-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span>Simulating ${inputs.monteCarloRuns.toLocaleString()} scenarios...</span>
+                    </span>
+                `;
                 this.hideStatus();
 
                 // Small delay to allow UI to update
@@ -3326,6 +3972,7 @@
                     this.showStatus('Error running simulation. Please check your inputs.', 'error');
                 } finally {
                     btn.disabled = false;
+                    btn.classList.remove('animate-pulse');
                     btn.innerHTML = originalText;
                 }
             },
@@ -3346,9 +3993,16 @@
 
                 // Trigger celebration for good outcomes
                 const bestSuccessRate = Math.max(...Object.values(results).map(r => r.successRate));
+
+                // Animate the hero percentage with count-up effect
+                setTimeout(() => {
+                    CelebrationEffects.animateNumber('hero-percentage', bestSuccessRate, 1200, '%');
+                }, 400);
+
+                // Trigger confetti for good outcomes
                 setTimeout(() => {
                     CelebrationEffects.celebrateIfWarranted(bestSuccessRate, inputs.targetSuccessRate);
-                }, 500);
+                }, 1600);
             },
 
             /**
@@ -3381,26 +4035,26 @@
 
                 let html = `
                     <div class="text-center">
-                        <div class="${statusBg} rounded-3xl p-8 sm:p-12 mb-6">
-                            <div class="text-7xl sm:text-9xl font-bold ${statusColor} mb-3 tracking-tight">${best.successRate.toFixed(0)}%</div>
-                            <div class="text-apple-textSecondary text-lg">chance your money lasts to age ${inputs.planningAge}</div>
+                        <div class="${statusBg} rounded-3xl p-8 sm:p-12 mb-6 relative overflow-hidden result-card-reveal" style="animation-delay: 0.1s">
+                            <div class="text-7xl sm:text-9xl font-bold ${statusColor} mb-3 tracking-tight count-up" id="hero-percentage" style="animation-delay: 0.3s">${best.successRate.toFixed(0)}%</div>
+                            <div class="text-apple-textSecondary text-lg animate-fade-in-up" style="animation-delay: 0.5s; animation-fill-mode: both">chance your money lasts to age ${inputs.planningAge}</div>
                         </div>
 
-                        <h2 class="text-2xl sm:text-3xl font-semibold text-apple-text mb-3">${statusText}</h2>
-                        <p class="text-apple-textSecondary text-lg max-w-xl mx-auto leading-relaxed">${recommendation}</p>
+                        <h2 class="text-2xl sm:text-3xl font-semibold text-apple-text mb-3 animate-fade-in-up" style="animation-delay: 0.6s; animation-fill-mode: both">${statusText}</h2>
+                        <p class="text-apple-textSecondary text-lg max-w-xl mx-auto leading-relaxed animate-fade-in-up" style="animation-delay: 0.7s; animation-fill-mode: both">${recommendation}</p>
                     </div>
                 `;
 
-                // Quick action buttons - Apple styled
+                // Quick action buttons - Apple styled with animations
                 html += `
-                    <div class="flex flex-wrap justify-center gap-3 mt-8">
+                    <div class="flex flex-wrap justify-center gap-3 mt-8 animate-fade-in-up" style="animation-delay: 0.8s; animation-fill-mode: both">
                         <button onclick="document.getElementById('back-to-assumptions').click()"
-                            class="btn-apple-secondary px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+                            class="btn-apple-secondary px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2 icon-spin-hover hover:scale-105 transition-transform">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                             Edit Inputs
                         </button>
                         <button onclick="document.querySelector('[data-tab=charts]').click()"
-                            class="btn-apple px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+                            class="btn-apple px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2 hover:scale-105 transition-transform">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                             View Charts
                         </button>
@@ -3446,26 +4100,27 @@
                     const isBest = index === 0;
                     const successColor = meetsTarget ? 'text-apple-green' : s.successRate >= 70 ? 'text-apple-orange' : 'text-apple-red';
                     const barColor = meetsTarget ? 'bg-apple-green' : s.successRate >= 70 ? 'bg-apple-orange' : 'bg-apple-red';
+                    const animDelay = 0.1 + (index * 0.1);
 
                     html += `
-                        <div class="bg-apple-surface rounded-xl p-4 border ${isBest ? 'border-apple-blue shadow-md' : 'border-apple-borderLight'}">
+                        <div class="bg-apple-surface rounded-xl p-4 border ${isBest ? 'border-apple-blue shadow-md' : 'border-apple-borderLight'} hover-lift result-card-reveal" style="animation-delay: ${animDelay}s">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-2">
                                         <span class="font-semibold text-apple-text">${Report.strategyDisplayName(s.name)}</span>
-                                        ${isBest ? '<span class="text-xs font-medium text-apple-blue bg-apple-blueLight px-2 py-0.5 rounded-full">Best</span>' : ''}
+                                        ${isBest ? '<span class="text-xs font-medium text-apple-blue bg-apple-blueLight px-2 py-0.5 rounded-full animate-bounce-in" style="animation-delay: 0.5s">Best</span>' : ''}
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <div class="flex-1 max-w-48 h-2 bg-apple-borderLight rounded-full overflow-hidden">
-                                            <div class="${barColor} h-full rounded-full transition-all" style="width: ${s.successRate}%"></div>
+                                            <div class="${barColor} h-full rounded-full percentage-fill" style="width: ${s.successRate}%; animation-delay: ${animDelay + 0.2}s"></div>
                                         </div>
-                                        <span class="text-2xl font-bold ${successColor}">${s.successRate.toFixed(0)}%</span>
+                                        <span class="text-2xl font-bold ${successColor} number-animate">${s.successRate.toFixed(0)}%</span>
                                     </div>
                                 </div>
                                 <div class="flex gap-6 text-sm">
                                     <div class="text-center">
                                         <div class="text-apple-textTertiary text-xs mb-1">Median ending</div>
-                                        <div class="text-apple-text font-medium">${Charts.formatCurrency(s.medianFinal / finalDeflator)}</div>
+                                        <div class="text-apple-text font-medium number-animate">${Charts.formatCurrency(s.medianFinal / finalDeflator)}</div>
                                     </div>
                                     ${s.avgFailureAge ? `
                                     <div class="text-center">
@@ -3963,9 +4618,9 @@
                             }
                         });
 
-                        // Wiggle animation on the active tab button
-                        button.classList.add('animate-wiggle');
-                        setTimeout(() => button.classList.remove('animate-wiggle'), 500);
+                        // Bounce animation on the active tab button
+                        button.classList.add('attention-bounce');
+                        setTimeout(() => button.classList.remove('attention-bounce'), 600);
                     });
                 });
             },
@@ -4298,6 +4953,51 @@
                         setTimeout(() => sparkle.remove(), 2000);
                     }, i * 100);
                 }
+            },
+
+            /**
+             * Animate a number counting up from 0 to target value
+             */
+            animateNumber(elementId, targetValue, duration = 1500, suffix = '%') {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+
+                const startTime = performance.now();
+                const startValue = 0;
+
+                const easeOutExpo = (t) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+
+                const animate = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easedProgress = easeOutExpo(progress);
+                    const currentValue = startValue + (targetValue - startValue) * easedProgress;
+
+                    element.textContent = Math.round(currentValue) + suffix;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // Add a little bounce at the end
+                        element.classList.add('attention-bounce');
+                        setTimeout(() => element.classList.remove('attention-bounce'), 600);
+                    }
+                };
+
+                requestAnimationFrame(animate);
+            },
+
+            /**
+             * Create burst effect at element position
+             */
+            createBurst(element) {
+                const rect = element.getBoundingClientRect();
+                const burst = document.createElement('div');
+                burst.className = 'success-burst';
+                burst.style.left = rect.left + rect.width / 2 + 'px';
+                burst.style.top = rect.top + rect.height / 2 + 'px';
+                document.body.appendChild(burst);
+                setTimeout(() => burst.remove(), 1000);
             }
         };
 
@@ -5379,6 +6079,39 @@
         }
 
         // ============================================
+        // RIPPLE EFFECT FOR BUTTONS
+        // ============================================
+        function initRippleEffect() {
+            document.querySelectorAll('.btn-apple').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const ripple = document.createElement('span');
+                    ripple.className = 'ripple';
+                    ripple.style.left = (e.clientX - rect.left) + 'px';
+                    ripple.style.top = (e.clientY - rect.top) + 'px';
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+        }
+
+        // ============================================
+        // INPUT VALUE CHANGE ANIMATION
+        // ============================================
+        function initInputAnimations() {
+            document.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
+                let previousValue = input.value;
+                input.addEventListener('change', function() {
+                    if (this.value !== previousValue) {
+                        this.classList.add('value-changed');
+                        setTimeout(() => this.classList.remove('value-changed'), 300);
+                        previousValue = this.value;
+                    }
+                });
+            });
+        }
+
+        // ============================================
         // APPLICATION INITIALIZATION
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
@@ -5388,6 +6121,10 @@
             initInputSync();
             initTooltips();
             initWithdrawalHint();
+
+            // Initialize animations
+            initRippleEffect();
+            initInputAnimations();
 
             UI.init();
         });
