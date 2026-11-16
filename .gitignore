@@ -1,0 +1,5 @@
+# Screenshots and traces written by the Playwright browser tool
+.playwright-mcp/
+
+# OS files
+.DS_Store
